@@ -1,0 +1,182 @@
+/* Tags Management Styles */
+.service-tags-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.service-tags-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.service-tags-header h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.manage-tags-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.manage-tags-button:hover {
+  background-color: #5a6268;
+}
+
+.current-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.service-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #ced4da;
+}
+
+.remove-tag-button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 6px;
+  padding: 0;
+  line-height: 1;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.remove-tag-button:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.no-tags {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.tag-manager {
+  border-top: 1px solid #dee2e6;
+  padding-top: 1rem;
+}
+
+.tag-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 1rem;
+}
+
+.tag-search-input:focus {
+  outline: none;
+  border-color: #86b7b5;
+  box-shadow: 0 0 0 2px rgba(134, 183, 181, 0.1);
+}
+
+.available-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.available-tag-item {
+  background-color: white;
+  color: #495057;
+  border: 1px solid #ced4da;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.available-tag-item:hover {
+  background-color: #86b7b5;
+  color: white;
+  border-color: #86b7b5;
+}
+
+.add-new-tag {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.new-tag-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.add-tag-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.add-tag-button:hover {
+  background-color: #218838;
+}
+
+/* Responsive Design for Tags */
+@media (max-width: 768px) {
+  .service-tags-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .manage-tags-button {
+    width: 100%;
+  }
+
+  .add-new-tag {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .new-tag-input {
+    margin-bottom: 10px;
+  }
+}

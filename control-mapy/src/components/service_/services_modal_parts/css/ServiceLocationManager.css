@@ -1,0 +1,17 @@
+.service-location-section label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 0.5rem;
+  font-size: 14px;
+}
+
+.service-location-section input[type="text"] {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-top: 4px;
+  font-family: inherit;
+}

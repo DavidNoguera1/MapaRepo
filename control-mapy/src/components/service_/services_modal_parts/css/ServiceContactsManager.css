@@ -1,0 +1,208 @@
+.contacts-section {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+}
+
+.contacts-section h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2em;
+  border-bottom: 2px solid #28a745;
+  padding-bottom: 5px;
+}
+
+.contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.contact-item {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.contact-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.contact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.contact-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: #f8f9fa;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contact-type {
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-transform: capitalize;
+}
+
+.contact-label {
+  color: #666;
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+.delete-contact-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.delete-contact-btn:hover {
+  background: #c82333;
+}
+
+.delete-contact-btn.marked {
+  background: #ffc107;
+  color: #000;
+}
+
+.delete-contact-btn.marked:hover {
+  background: #e0a800;
+}
+
+.contact-item.marked-for-deletion {
+  opacity: 0.6;
+  background: #fff3cd;
+  border-color: #ffc107;
+  position: relative;
+}
+
+.contact-item.marked-for-deletion::before {
+  content: "Marcado para eliminar";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #ffc107;
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.pending-deletions-info {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 15px;
+  text-align: center;
+  color: #856404;
+}
+
+.contact-value {
+  color: #007bff;
+  font-size: 1em;
+  margin-bottom: 8px;
+  word-break: break-all;
+  transition: color 0.2s;
+}
+
+.contact-value:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.contact-date {
+  color: #999;
+  font-size: 0.85em;
+  text-align: right;
+}
+
+.no-contacts {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.no-contacts p {
+  margin: 0;
+  font-style: italic;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.loading {
+  color: #666;
+}
+
+.error {
+  color: #dc3545;
+  background: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .contacts-section {
+    padding: 15px;
+  }
+
+  .contact-item {
+    padding: 12px;
+  }
+
+  .contact-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .contact-info {
+    width: 100%;
+  }
+
+  .contact-value {
+    word-break: break-word;
+  }
+}

@@ -1,0 +1,30 @@
+.service-details label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 0.5rem;
+  font-size: 14px;
+}
+
+.service-details input[type="text"],
+.service-details textarea {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  margin-top: 4px;
+  font-family: inherit;
+}
+
+.service-details textarea {
+  min-height: 80px;
+}
+
+.service-details input[type="checkbox"] {
+  margin-top: 8px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}

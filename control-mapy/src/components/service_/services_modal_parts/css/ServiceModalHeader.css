@@ -1,0 +1,31 @@
+.service-title-input {
+  font-size: 24px;
+  font-weight: 700;
+  border: none;
+  outline: none;
+  width: 100%;
+  background: transparent;
+  color: #333;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #888;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-button:hover {
+  background: #eee;
+  color: #555;
+  transform: rotate(90deg);
+}
