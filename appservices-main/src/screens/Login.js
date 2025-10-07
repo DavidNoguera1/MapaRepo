@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { login as apiLogin } from '../api/auth';
@@ -29,52 +30,56 @@ const Login = () => {
   };
 
   return (
-    <LinearGradient
-      colors={["#7EC8E3", "#43C6AC"]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={styles.container}
-    >
-      <View style={styles.iconContainer}>
-        {/* Aquí puedes poner tu icono, por ejemplo usando react-native-vector-icons */}
-      </View>
-      <Text style={styles.title}>Apprueba</Text>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.buttonActive}>
-          <Text style={styles.buttonTextActive}>Iniciar Sesión</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonInactive} onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.buttonTextInactive}>Crear Cuenta</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.form}>
-        <Text style={styles.label}>Correo electrónico</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="tucorreo@ejemplo.com"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-        <Text style={styles.label}>Contraseña</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Introduce tu contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.privacyText}>
-        Al continuar aceptas los Términos y la Política de Privacidad.
-      </Text>
-    </LinearGradient>
+  <SafeAreaView style={{ flex: 1, backgroundColor: '#7EC8E3' }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={["#7EC8E3", "#43C6AC"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.container}
+        >
+          <View style={styles.iconContainer}>
+            {/* Aquí puedes poner tu icono, por ejemplo usando react-native-vector-icons */}
+          </View>
+          <Text style={styles.title}>Apprueba</Text>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.buttonActive}>
+              <Text style={styles.buttonTextActive}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonInactive} onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.buttonTextInactive}>Crear Cuenta</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.form}>
+            <Text style={styles.label}>Correo electrónico</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="tucorreo@ejemplo.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+            />
+            <Text style={styles.label}>Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Introduce tu contraseña"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.privacyText}>
+            Al continuar aceptas los Términos y la Política de Privacidad.
+          </Text>
+        </LinearGradient>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

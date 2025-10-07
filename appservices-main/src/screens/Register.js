@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { register as apiRegister } from '../api/auth';
@@ -45,84 +46,88 @@ const Register = () => {
   };
 
   return (
-    <LinearGradient
-      colors={["#7EC8E3", "#43C6AC"]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={styles.container}
-    >
-      {/* Icono eliminado */}
-      <Text style={styles.title}>Apprueba</Text>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.buttonInactive} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.buttonTextInactive}>Iniciar Sesión</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonActive}>
-          <Text style={styles.buttonTextActive}>Crear Cuenta</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.form}>
-        <Text style={styles.label}>Nombre de usuario</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Tu nombre de usuario"
-          value={user_name}
-          onChangeText={setUserName}
-        />
-        <View style={styles.row}>
-          <View style={styles.inputGroupHalf}>
-            <Text style={styles.label}>Número de cédula</Text>
+  <SafeAreaView style={{ flex: 1, backgroundColor: '#7EC8E3' }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={["#7EC8E3", "#43C6AC"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.container}
+        >
+          {/* Icono eliminado */}
+          <Text style={styles.title}>Apprueba</Text>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.buttonInactive} onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.buttonTextInactive}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonActive}>
+              <Text style={styles.buttonTextActive}>Crear Cuenta</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.form}>
+            <Text style={styles.label}>Nombre de usuario</Text>
             <TextInput
               style={styles.input}
-              placeholder="12345678"
-              value={cedula}
-              onChangeText={setCedula}
-              keyboardType="numeric"
+              placeholder="Tu nombre de usuario"
+              value={user_name}
+              onChangeText={setUserName}
             />
-          </View>
-          <View style={styles.inputGroupHalf}>
-            <Text style={styles.label}>Teléfono</Text>
+            <View style={styles.row}>
+              <View style={styles.inputGroupHalf}>
+                <Text style={styles.label}>Número de cédula</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="12345678"
+                  value={cedula}
+                  onChangeText={setCedula}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={styles.inputGroupHalf}>
+                <Text style={styles.label}>Teléfono</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="300 000 0000"
+                  value={telefono}
+                  onChangeText={setTelefono}
+                  keyboardType="phone-pad"
+                />
+              </View>
+            </View>
+            <Text style={styles.label}>Correo electrónico</Text>
             <TextInput
               style={styles.input}
-              placeholder="300 000 0000"
-              value={telefono}
-              onChangeText={setTelefono}
-              keyboardType="phone-pad"
+              placeholder="tucorreo@ejemplo.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
             />
+            <Text style={styles.label}>Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Introduce tu contraseña"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+            <Text style={styles.label}>Confirmar contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Vuelve a escribir tu contraseña"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+            />
+            <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+              <Text style={styles.registerButtonText}>Crear Cuenta</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-        <Text style={styles.label}>Correo electrónico</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="tucorreo@ejemplo.com"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-        <Text style={styles.label}>Contraseña</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Introduce tu contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <Text style={styles.label}>Confirmar contraseña</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Vuelve a escribir tu contraseña"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
-        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-          <Text style={styles.registerButtonText}>Crear Cuenta</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.privacyText}>
-        Al continuar aceptas los Términos y la Política de Privacidad.
-      </Text>
-    </LinearGradient>
+          <Text style={styles.privacyText}>
+            Al continuar aceptas los Términos y la Política de Privacidad.
+          </Text>
+        </LinearGradient>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

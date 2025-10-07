@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../contexts/UserContext';
 import { getProfile, updateProfile, updatePassword, deleteAccount } from '../api/user';
@@ -110,84 +111,86 @@ export default function Settings() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={styles.header}>Configuración</Text>
-      <Text style={styles.subheader}>Perfil y preferencias</Text>
-      <View style={styles.card}>
-        <Text style={styles.label}>Nombre de usuario</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.user_name}
-          onChangeText={value => handleChange('user_name', value)}
-          placeholder="Nombre de usuario"
-          autoCapitalize="none"
-        />
-        <Text style={styles.label}>Correo electrónico</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.email}
-          onChangeText={value => handleChange('email', value)}
-          placeholder="tucorreo@ejemplo.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <Text style={styles.label}>Teléfono</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.phone}
-          onChangeText={value => handleChange('phone', value)}
-          placeholder="300 000 0000"
-          keyboardType="phone-pad"
-        />
-        <Text style={styles.label}>Cédula</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.cedula}
-          onChangeText={value => handleChange('cedula', value)}
-          placeholder="12345678"
-          keyboardType="numeric"
-        />
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile} disabled={loading}>
-          <Text style={styles.saveButtonText}>{loading ? 'Guardando...' : 'Guardar Cambios'}</Text>
+  <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Text style={styles.header}>Configuración</Text>
+        <Text style={styles.subheader}>Perfil y preferencias</Text>
+        <View style={styles.card}>
+          <Text style={styles.label}>Nombre de usuario</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.user_name}
+            onChangeText={value => handleChange('user_name', value)}
+            placeholder="Nombre de usuario"
+            autoCapitalize="none"
+          />
+          <Text style={styles.label}>Correo electrónico</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.email}
+            onChangeText={value => handleChange('email', value)}
+            placeholder="tucorreo@ejemplo.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <Text style={styles.label}>Teléfono</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.phone}
+            onChangeText={value => handleChange('phone', value)}
+            placeholder="300 000 0000"
+            keyboardType="phone-pad"
+          />
+          <Text style={styles.label}>Cédula</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.cedula}
+            onChangeText={value => handleChange('cedula', value)}
+            placeholder="12345678"
+            keyboardType="numeric"
+          />
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile} disabled={loading}>
+            <Text style={styles.saveButtonText}>{loading ? 'Guardando...' : 'Guardar Cambios'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Cambiar Contraseña</Text>
+          <Text style={styles.label}>Contraseña actual</Text>
+          <TextInput
+            style={styles.input}
+            value={passwords.currentPassword}
+            onChangeText={value => handlePasswordChange('currentPassword', value)}
+            placeholder="Contraseña actual"
+            secureTextEntry
+          />
+          <Text style={styles.label}>Nueva contraseña</Text>
+          <TextInput
+            style={styles.input}
+            value={passwords.newPassword}
+            onChangeText={value => handlePasswordChange('newPassword', value)}
+            placeholder="Nueva contraseña"
+            secureTextEntry
+          />
+          <Text style={styles.label}>Confirmar nueva contraseña</Text>
+          <TextInput
+            style={styles.input}
+            value={passwords.confirmNewPassword}
+            onChangeText={value => handlePasswordChange('confirmNewPassword', value)}
+            placeholder="Confirmar nueva contraseña"
+            secureTextEntry
+          />
+          <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword} disabled={loading}>
+            <Text style={styles.saveButtonText}>{loading ? 'Cambiando...' : 'Cambiar Contraseña'}</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount} disabled={loading}>
+          <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
         </TouchableOpacity>
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Cambiar Contraseña</Text>
-        <Text style={styles.label}>Contraseña actual</Text>
-        <TextInput
-          style={styles.input}
-          value={passwords.currentPassword}
-          onChangeText={value => handlePasswordChange('currentPassword', value)}
-          placeholder="Contraseña actual"
-          secureTextEntry
-        />
-        <Text style={styles.label}>Nueva contraseña</Text>
-        <TextInput
-          style={styles.input}
-          value={passwords.newPassword}
-          onChangeText={value => handlePasswordChange('newPassword', value)}
-          placeholder="Nueva contraseña"
-          secureTextEntry
-        />
-        <Text style={styles.label}>Confirmar nueva contraseña</Text>
-        <TextInput
-          style={styles.input}
-          value={passwords.confirmNewPassword}
-          onChangeText={value => handlePasswordChange('confirmNewPassword', value)}
-          placeholder="Confirmar nueva contraseña"
-          secureTextEntry
-        />
-        <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword} disabled={loading}>
-          <Text style={styles.saveButtonText}>{loading ? 'Cambiando...' : 'Cambiar Contraseña'}</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
         </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount} disabled={loading}>
-        <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

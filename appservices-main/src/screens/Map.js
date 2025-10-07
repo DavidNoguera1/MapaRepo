@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { WebView } from 'react-native-webview';
 
@@ -39,20 +40,21 @@ export default function Map() {
     })();
   }, []);
 
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+  <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1bc47d" />
         <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (errorMsg) {
     return (
-      <View style={styles.loadingContainer}>
+  <SafeAreaView style={styles.loadingContainer}>
         <Text style={styles.loadingText}>{errorMsg}</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -64,7 +66,7 @@ export default function Map() {
   const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.01}%2C${lat-0.01}%2C${lon+0.01}%2C${lat+0.01}&layer=mapnik&marker=${lat}%2C${lon}`;
 
   return (
-    <View style={styles.container}>
+  <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Mapa</Text>
         <Text style={styles.subtitle}>Servicios cercanos a tu ubicación</Text>
@@ -77,7 +79,7 @@ export default function Map() {
         startInLoadingState={true}
         scalesPageToFit={true}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -1,6 +1,7 @@
 // Nota: La ruta "ChatDetail" debe estar registrada en el stack de navegación.
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -52,41 +53,43 @@ export default function Chats({ navigation }) {
   );
 
   return (
-    <LinearGradient colors={["#f9fcff", "#fff"]} style={styles.bg}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Chats</Text>
-        <Text style={styles.subtitle}>Conversaciones con prestadores de servicio</Text>
-      </View>
-      <FlatList
-        data={chats}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-      <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home')}>
-          <MaterialCommunityIcons name="home" size={28} color={neutral} />
-          <Text style={styles.navLabel}>Inicio</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialCommunityIcons name="message-text-outline" size={28} color={accent} />
-          <Text style={[styles.navLabel, { color: accent }]}>Chats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Map')}>
-          <MaterialCommunityIcons name="map-marker-outline" size={28} color={neutral} />
-          <Text style={styles.navLabel}>Mapa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Favorites')}>
-          <MaterialCommunityIcons name="heart-outline" size={28} color={neutral} />
-          <Text style={styles.navLabel}>Favoritos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Settings')}>
-          <Ionicons name="settings-outline" size={28} color={neutral} />
-          <Text style={styles.navLabel}>Ajustes</Text>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+  <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fcff' }}>
+      <LinearGradient colors={["#f9fcff", "#fff"]} style={styles.bg}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Chats</Text>
+          <Text style={styles.subtitle}>Conversaciones con prestadores de servicio</Text>
+        </View>
+        <FlatList
+          data={chats}
+          keyExtractor={item => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+        <View style={styles.navBar}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home')}>
+            <MaterialCommunityIcons name="home" size={28} color={neutral} />
+            <Text style={styles.navLabel}>Inicio</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <MaterialCommunityIcons name="message-text-outline" size={28} color={accent} />
+            <Text style={[styles.navLabel, { color: accent }]}>Chats</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Map')}>
+            <MaterialCommunityIcons name="map-marker-outline" size={28} color={neutral} />
+            <Text style={styles.navLabel}>Mapa</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Favorites')}>
+            <MaterialCommunityIcons name="heart-outline" size={28} color={neutral} />
+            <Text style={styles.navLabel}>Favoritos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Settings')}>
+            <Ionicons name="settings-outline" size={28} color={neutral} />
+            <Text style={styles.navLabel}>Ajustes</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 

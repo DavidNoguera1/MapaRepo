@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, FontAwesome5, Feather, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -33,10 +34,22 @@ const featured = [
 export default function Home() {
   const navigation = require('@react-navigation/native').useNavigation();
   return (
-    <View style={styles.container}>
-      {/* Top Navigation Bar */}
-
-      <ScrollView showsVerticalScrollIndicator={false}>
+  <SafeAreaView style={styles.container}>
+      {/* Fixed Navigation Bar at Top */}
+      <View style={[styles.navBar, { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }]}> 
+        <MaterialCommunityIcons name="home" size={22} color="#1bc47d" />
+        <Text style={styles.navLabel}>Inicio</Text>
+        <MaterialCommunityIcons name="message-text-outline" size={22} color="#b0b7c3" />
+        <Text style={styles.navLabel}>Chats</Text>
+        <MaterialCommunityIcons name="map-marker-outline" size={22} color="#b0b7c3" />
+        <Text style={styles.navLabel}>Mapa</Text>
+        <MaterialCommunityIcons name="heart-outline" size={22} color="#b0b7c3" />
+        <Text style={styles.navLabel}>Favoritos</Text>
+        <Ionicons name="settings-outline" size={22} color="#b0b7c3" />
+        <Text style={styles.navLabel}>Ajustes</Text>
+      </View>
+      {/* Add top padding to avoid navBar overlap */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 60 }}>
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeText}>Bienvenido de vuelta, Usuario</Text>
@@ -97,7 +110,7 @@ export default function Home() {
           ))}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

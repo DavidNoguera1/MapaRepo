@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const favorites = [
   {
@@ -26,7 +27,7 @@ const FavoriteCard = ({ item }) => (
 
 export default function Favourites() {
   return (
-    <View style={styles.container}>
+  <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Favoritos</Text>
       <Text style={styles.subheader}>Tus servicios guardados</Text>
       <FlatList
@@ -38,7 +39,7 @@ export default function Favourites() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
