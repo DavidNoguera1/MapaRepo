@@ -36,7 +36,7 @@ export default function Home() {
   return (
   <SafeAreaView style={styles.container}>
       {/* Fixed Navigation Bar at Top */}
-      <View style={[styles.navBar, { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }]}> 
+      {/* <View style={[styles.navBar, { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }]}> 
         <MaterialCommunityIcons name="home" size={22} color="#1bc47d" />
         <Text style={styles.navLabel}>Inicio</Text>
         <MaterialCommunityIcons name="message-text-outline" size={22} color="#b0b7c3" />
@@ -47,7 +47,7 @@ export default function Home() {
         <Text style={styles.navLabel}>Favoritos</Text>
         <Ionicons name="settings-outline" size={22} color="#b0b7c3" />
         <Text style={styles.navLabel}>Ajustes</Text>
-      </View>
+      </View> */}
       {/* Add top padding to avoid navBar overlap */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 60 }}>
         {/* Welcome Section */}
@@ -110,9 +110,9 @@ export default function Home() {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    // </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

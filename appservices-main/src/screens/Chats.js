@@ -66,7 +66,7 @@ export default function Chats({ navigation }) {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
-        <View style={styles.navBar}>
+        {/* <View style={styles.navBar}>
           <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home')}>
             <MaterialCommunityIcons name="home" size={28} color={neutral} />
             <Text style={styles.navLabel}>Inicio</Text>
@@ -87,7 +87,7 @@ export default function Chats({ navigation }) {
             <Ionicons name="settings-outline" size={28} color={neutral} />
             <Text style={styles.navLabel}>Ajustes</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </LinearGradient>
     </SafeAreaView>
   );

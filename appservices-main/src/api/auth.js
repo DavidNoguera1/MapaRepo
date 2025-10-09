@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.80.46:3001/api/auth'; // Adjust if backend runs on different host/port
+// const API_BASE_URL = 'http://192.168.80.46:3001/api/auth'; // Adjust if backend runs on different host/port
 
 export async function register({ user_name, email, password, phone, cedula }) {
   try {

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.80.46:3001/api/users';
+// const API_BASE_URL = 'http://192.168.80.46:3001/api/users';
 
 export async function getProfile(token) {
   try {
