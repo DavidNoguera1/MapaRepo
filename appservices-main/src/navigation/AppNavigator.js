@@ -6,7 +6,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import Home from '../screens/Home';
 import Chats from '../screens/Chats';
 import Map from '../screens/Map';
-import Favourites from '../screens/Favourites';
+import Myservices from '../screens/Myservices';
 import Settings from '../screens/Settings';
 import Login from '../screens/Login';
 import Register from '../screens/Register';
@@ -35,7 +35,7 @@ function MainTabs() {
               return <MaterialCommunityIcons name="message-text-outline" size={22} color={color} />;
             case 'Map':
               return <MaterialCommunityIcons name="map-marker-outline" size={22} color={color} />;
-            case 'Favorites':
+            case 'MyServices':
               return <MaterialCommunityIcons name="heart-outline" size={22} color={color} />;
             case 'Settings':
               return <Ionicons name="settings-outline" size={22} color={color} />;
@@ -48,7 +48,7 @@ function MainTabs() {
       <Tab.Screen name="Home" component={Home} options={{ tabBarLabel: 'Inicio' }} />
       <Tab.Screen name="Chats" component={Chats} options={{ tabBarLabel: 'Chats' }} />
       <Tab.Screen name="Map" component={Map} options={{ tabBarLabel: 'Mapa' }} />
-      <Tab.Screen name="Favorites" component={Favourites} options={{ tabBarLabel: 'Favoritos' }} />
+      <Tab.Screen name="MyServices" component={Myservices} options={{ tabBarLabel: 'Mis servicios' }} />
       <Tab.Screen name="Settings" component={Settings} options={{ tabBarLabel: 'Ajustes' }} />
     </Tab.Navigator>
   );
