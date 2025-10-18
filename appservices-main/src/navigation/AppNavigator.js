@@ -5,10 +5,12 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 
 import Home from '../screens/Home';
 import Chats from '../screens/Chats';
+import ChatScreen from '../screens/ChatScreen';
 import Map from '../screens/Map';
 import Myservices from '../screens/Myservices';
 import Settings from '../screens/Settings';
 import Login from '../screens/Login';
+import ProfilePhoto from '../screens/ProfilePhoto';
 import Register from '../screens/Register';
 
 
@@ -36,7 +38,7 @@ function MainTabs() {
             case 'Map':
               return <MaterialCommunityIcons name="map-marker-outline" size={22} color={color} />;
             case 'MyServices':
-              return <MaterialCommunityIcons name="heart-outline" size={22} color={color} />;
+              return <MaterialCommunityIcons name="briefcase-outline" size={22} color={color} />;
             case 'Settings':
               return <Ionicons name="settings-outline" size={22} color={color} />;
             default:
@@ -61,6 +63,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen name="ChatScreen" component={ChatScreen} />
+        <Stack.Screen name="ProfilePhoto" component={ProfilePhoto} />
       </Stack.Navigator>
     </NavigationContainer>
   );

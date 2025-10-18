@@ -3,8 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, Switch, TouchableOpacity, StyleSheet, ScrollView, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import Toast from 'react-native-toast-message';
 
 export default function AddServiceModal({ visible, onClose, onSave, isEditing = false, existingService }) {
+  const [tagsText, setTagsText] = useState('');
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -15,22 +18,27 @@ export default function AddServiceModal({ visible, onClose, onSave, isEditing = 
     price: existingService?.price || '',
     coverPhoto: existingService?.coverPhoto || null,
     gallery: existingService?.gallery || [],
+    tags: [],
   });
 
   useEffect(() => {
-    if (isEditing && existingService) {
-      setForm(existingService);
-    } else {
-      setForm({
-        title: '',
-        description: '',
-        cover_image_url: '',
-        address_text: '',
-        location_geog: '',
-        is_active: true,
-      });
-    }
-  }, [visible]);
+  if (isEditing && existingService) {
+    setForm(existingService);
+    setTagsText(existingService.tags?.join(', ') || ''); // 👈 muestra los tags en el input
+  } else {
+    setForm({
+      title: '',
+      description: '',
+      cover_image_url: '',
+      address_text: '',
+      location_geog: '',
+      is_active: true,
+      tags: [],
+    });
+    setTagsText(''); 
+  }
+}, [visible]);
+
 
   useEffect(() => {
   (async () => {
@@ -44,25 +52,40 @@ export default function AddServiceModal({ visible, onClose, onSave, isEditing = 
   const handleChange = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = () => {
-    if (!form.title || !form.description) {
-      alert('Por favor, completa los campos obligatorios.');
-      return;
-    }
+  if (!form.title || !form.description) {
+    alert('Por favor, completa los campos obligatorios.');
+    return;
+  }
 
-        // Crear objeto del servicio (nuevo o existente)
-      const newService = {
-        id: existingService?.id || Date.now().toString(),
-        title: form.title,
-        description: form.description,
-        // puedes agregar más campos si los hay
-      };
-
-      // Llamar a la función que guarda el servicio
-      onSave(newService);
-
-      // Cerrar modal o formulario
-      onClose();
+  // Crear objeto del servicio (nuevo o existente)
+  const newService = {
+    id: existingService?.id || Date.now().toString(),
+    title: form.title,
+    description: form.description,
+    // puedes agregar más campos si los hay
   };
+
+  // Guardar el servicio
+  onSave(newService);
+
+  // Mostrar mensaje según sea nuevo o editado
+  if (existingService) {
+    Toast.show({
+      type: 'info',
+      text1: 'Servicio actualizado',
+      text2: 'Los cambios se guardaron correctamente ✨',
+    });
+  } else {
+    Toast.show({
+      type: 'success',
+      text1: 'Servicio agregado',
+      text2: 'El servicio se añadió correctamente 👌',
+    });
+  }
+
+  // Cerrar modal
+  onClose();
+};
 
   const pickCoverPhoto = async () => {
   const result = await ImagePicker.launchImageLibraryAsync({
@@ -153,6 +176,32 @@ const pickGalleryPhotos = async () => {
               keyboardType="numeric"
               style={styles.input}
             />
+
+            <TextInput
+  style={styles.input}
+  placeholder="Etiquetas (separa con comas)"
+  value={tagsText}
+  onChangeText={(text) => {
+    setTagsText(text); // 👈 actualiza el texto visible
+    const tagsArray = text
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0);
+    setForm({ ...form, tags: tagsArray });
+  }}
+/>
+
+{Array.isArray(form.tags) && form.tags.length > 0 && (
+  <View style={styles.tagsContainer}>
+    {form.tags.map((tag, index) => (
+      <View key={index} style={styles.tag}>
+        <Text style={styles.tagText}>#{tag}</Text>
+      </View>
+    ))}
+  </View>
+)}
+
+
 
             <TouchableOpacity style={styles.btn} onPress={pickCoverPhoto}>
               <Text style={styles.btnText}>{form.coverPhoto ? 'Cambiar Foto de Portada' : 'Seleccionar Foto de Portada'}</Text>

@@ -3,16 +3,22 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { UserProvider } from './src/contexts/UserContext';
+import Toast from 'react-native-toast-message';
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <UserProvider>
-        <SafeAreaView style={styles.safeArea}>
-          <AppNavigator />
-        </SafeAreaView>
-      </UserProvider>
-    </SafeAreaProvider>
+    <RootSiblingParent>
+      <SafeAreaProvider>
+        <UserProvider>
+          <SafeAreaView style={styles.safeArea}>
+            <AppNavigator />
+            {/* Toast global */}
+            <Toast />
+          </SafeAreaView>
+        </UserProvider>
+      </SafeAreaProvider>
+    </RootSiblingParent>
   );
 }
 

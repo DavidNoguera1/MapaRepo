@@ -1,10 +1,46 @@
-// components/ServiceDetailsModal.jsx
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 
 export default function ServiceDetailsModal({ visible, service, onClose, onEdit, onDelete }) {
   if (!service) return null;
+
+  // 🗑️ Función con confirmación y toast
+  const handleDelete = (id) => {
+    Alert.alert(
+      'Confirmar eliminación',
+      '¿Estás seguro de que quieres eliminar este servicio?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await onDelete(id); // llama la función de eliminación que viene como prop
+
+              Toast.show({
+                type: 'error',
+                text1: 'Servicio eliminado',
+                text2: 'El servicio fue eliminado correctamente 🗑️',
+              });
+
+              onClose(); // cierra la modal
+            } catch (error) {
+              Toast.show({
+                type: 'error',
+                text1: 'Error al eliminar',
+                text2: 'No se pudo eliminar el servicio 😕',
+              });
+              console.error('Error eliminando servicio:', error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -32,12 +68,18 @@ export default function ServiceDetailsModal({ visible, service, onClose, onEdit,
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity style={[styles.btn, { backgroundColor: '#3B82F6' }]} onPress={() => onEdit(service)}>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: '#3B82F6' }]}
+              onPress={() => onEdit(service)}
+            >
               <Ionicons name="create-outline" size={18} color="#fff" />
               <Text style={styles.btnText}>Editar</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.btn, { backgroundColor: '#EF4444' }]} onPress={() => onDelete(service.id)}>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: '#EF4444' }]}
+              onPress={() => handleDelete(service.id)}
+            >
               <Ionicons name="trash-outline" size={18} color="#fff" />
               <Text style={styles.btnText}>Eliminar</Text>
             </TouchableOpacity>

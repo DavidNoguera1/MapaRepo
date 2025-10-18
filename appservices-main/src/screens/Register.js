@@ -44,7 +44,7 @@ const Register = () => {
     //   Alert.alert('Error', error.message);
     // }
 
-    navigation.replace('MainTabs');
+    navigation.replace('ProfilePhoto');
   };
 
   return (
@@ -121,7 +121,7 @@ const Register = () => {
               secureTextEntry
             />
             <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-              <Text style={styles.registerButtonText}>Crear Cuenta</Text>
+              <Text style={styles.registerButtonText}>Siguiente</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.privacyText}>

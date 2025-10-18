@@ -31,7 +31,7 @@ export default function Chats({ navigation }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.chatRow}
-      onPress={() => navigation.navigate('ChatDetail', { chatId: item.id, chatName: item.name })}
+      onPress={() => navigation.navigate('ChatScreen', { chatId: item.id, chatName: item.name })}
       accessibilityLabel={`Open chat ${item.name}`}
     >
       <View style={styles.avatarBox}>
@@ -66,28 +66,6 @@ export default function Chats({ navigation }) {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
-        {/* <View style={styles.navBar}>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home')}>
-            <MaterialCommunityIcons name="home" size={28} color={neutral} />
-            <Text style={styles.navLabel}>Inicio</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <MaterialCommunityIcons name="message-text-outline" size={28} color={accent} />
-            <Text style={[styles.navLabel, { color: accent }]}>Chats</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Map')}>
-            <MaterialCommunityIcons name="map-marker-outline" size={28} color={neutral} />
-            <Text style={styles.navLabel}>Mapa</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Favorites')}>
-            <MaterialCommunityIcons name="heart-outline" size={28} color={neutral} />
-            <Text style={styles.navLabel}>Favoritos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Settings')}>
-            <Ionicons name="settings-outline" size={28} color={neutral} />
-            <Text style={styles.navLabel}>Ajustes</Text>
-          </TouchableOpacity>
-        </View> */}
       </LinearGradient>
     </SafeAreaView>
   );
