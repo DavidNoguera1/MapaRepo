@@ -11,6 +11,9 @@ router.use(authenticateToken);
 // Crear tag
 router.post('/', tagsController.createTag);
 
+// Crear o encontrar tag por nombre
+router.post('/create-or-find', tagsController.createOrFindTag);
+
 // Obtener tags (con búsqueda opcional)
 router.get('/', tagsController.getTags);
 

@@ -1,8 +1,8 @@
-// const API_BASE_URL = 'http://192.168.80.46:3001/api/auth'; // Adjust if backend runs on different host/port
+import { API_BASE_URL } from './config';
 
 export async function register({ user_name, email, password, phone, cedula }) {
   try {
-    const response = await fetch(`${API_BASE_URL}/register`, {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,7 +21,7 @@ export async function register({ user_name, email, password, phone, cedula }) {
 
 export async function login({ email, password }) {
   try {
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../contexts/UserContext';
 import { getProfile, updateProfile, updatePassword, deleteAccount } from '../api/user';
+import { uploadProfileImage } from '../api/profile';
 
 export default function Settings() {
   const navigation = useNavigation();
@@ -21,6 +24,8 @@ export default function Settings() {
     confirmNewPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageKey, setImageKey] = useState(Date.now());
 
   useEffect(() => {
     if (user) {
@@ -44,8 +49,15 @@ export default function Settings() {
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      const updated = await updateProfile(token, formData);
-      updateUser(updated);
+      const response = await updateProfile(token, formData);
+      updateUser(response.user);
+      // Update form data to reflect changes
+      setFormData({
+        user_name: response.user.user_name || '',
+        email: response.user.email || '',
+        phone: response.user.phone || '',
+        cedula: response.user.cedula || '',
+      });
       Alert.alert('Éxito', 'Perfil actualizado correctamente');
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -105,6 +117,37 @@ export default function Settings() {
     );
   };
 
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert('Permiso denegado', 'Necesitas otorgar acceso a la galería.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setUploadingImage(true);
+      try {
+        await uploadProfileImage(result.assets[0].uri, token);
+        Alert.alert('Éxito', 'Imagen de perfil actualizada correctamente');
+        // Refresh user data
+        const updatedUser = await getProfile(token);
+        updateUser(updatedUser);
+        // Force image re-render
+        setImageKey(Date.now());
+      } catch (error) {
+        Alert.alert('Error', error.message);
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigation.replace('Login');
@@ -115,6 +158,34 @@ export default function Settings() {
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
         <Text style={styles.header}>Configuración</Text>
         <Text style={styles.subheader}>Perfil y preferencias</Text>
+
+        {/* Profile Image Section */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Foto de Perfil</Text>
+          <View style={styles.profileImageContainer}>
+            {user?.profile_picture_url ? (
+              <Image
+                key={imageKey}
+                source={{ uri: `http://192.168.100.216:3001${user.profile_picture_url}` }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={styles.profileImagePlaceholder}>
+                <Ionicons name="person-circle-outline" size={80} color="#64748B" />
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.changeImageButton}
+              onPress={pickImage}
+              disabled={uploadingImage}
+            >
+              <Text style={styles.changeImageText}>
+                {uploadingImage ? 'Subiendo...' : 'Cambiar foto'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.card}>
           <Text style={styles.label}>Nombre de usuario</Text>
           <TextInput
@@ -141,11 +212,12 @@ export default function Settings() {
             placeholder="300 000 0000"
             keyboardType="phone-pad"
           />
+          {/* Cédula no editable */}
           <Text style={styles.label}>Cédula</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: '#F0F0F0', color: '#999' }]}
             value={formData.cedula}
-            onChangeText={value => handleChange('cedula', value)}
+            editable={false}
             placeholder="12345678"
             keyboardType="numeric"
           />
@@ -183,14 +255,16 @@ export default function Settings() {
             <Text style={styles.saveButtonText}>{loading ? 'Cambiando...' : 'Cambiar Contraseña'}</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount} disabled={loading}>
-          <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+        <View style={styles.bottomButtons}>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount} disabled={loading}>
+            <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
   );
 }
 
@@ -277,5 +351,40 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  profileImageContainer: {
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  profileImagePlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  changeImageButton: {
+    backgroundColor: '#43C6AC',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  changeImageText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  bottomButtons: {
+    paddingHorizontal: 10,
+    paddingBottom: 20,
+    backgroundColor: '#F8FAFC',
   },
 });

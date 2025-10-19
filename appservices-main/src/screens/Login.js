@@ -15,20 +15,18 @@ const Login = () => {
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-  //   if (!email || !password) {
-  //     Alert.alert('Error', 'Por favor ingresa email y contraseña');
-  //     return;
-  //   }
-  //   try {
-  //     const data = await apiLogin({ email, password });
-  //     await login(data.user, data.token);
-  //     // On success, navigate to MainTabs
-  //     navigation.replace('MainTabs');
-  //   } catch (error) {
-  //     Alert.alert('Error', error.message);
-  //   }
-
-  navigation.replace('MainTabs');
+    if (!email || !password) {
+      Alert.alert('Error', 'Por favor ingresa email y contraseña');
+      return;
+    }
+    try {
+      const data = await apiLogin({ email, password });
+      await login(data.user, data.token);
+      // On success, navigate to MainTabs
+      navigation.replace('MainTabs');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (

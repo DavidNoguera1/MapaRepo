@@ -1,0 +1,3 @@
+// Configuration for API base URLs
+export const API_BASE_URL = 'http://192.168.100.216:3001/api';
+export const SERVER_BASE_URL = 'http://192.168.100.216:3001';

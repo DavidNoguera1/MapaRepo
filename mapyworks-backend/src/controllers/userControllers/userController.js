@@ -37,28 +37,28 @@ const getProfile = async (req, res) => {
 // Actualizar perfil del usuario
 const updateProfile = async (req, res) => {
   try {
-    const { user_name, email, phone, cedula, profile_picture_url } = req.body;
+    const { user_name, email, phone } = req.body;
 
     // Validaciones básicas
     if (!user_name) {
       return res.status(400).json({ error: 'El nombre de usuario es requerido' });
     }
 
-    // Verificar si la nueva cédula ya existe (si se proporciona y es diferente)
-    if (cedula) {
-      const existingUser = await User.findByCedula(cedula);
-      if (existingUser && existingUser.id !== req.userId) {
-        return res.status(409).json({ error: 'La cédula ya está registrada' });
-      }
+    // Obtener usuario actual para preservar campos no editables
+    const currentUser = await User.findById(req.userId);
+    if (!currentUser) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // Actualizar usuario
+    // Actualizar solo los campos permitidos
     const updatedUser = await User.update(req.userId, {
       user_name,
       email,
       phone,
-      cedula,
-      profile_picture_url
+      cedula: currentUser.cedula, // Preservar cédula
+      profile_picture_url: currentUser.profile_picture_url, // Preservar imagen
+      role: currentUser.role, // Preservar rol
+      is_active: currentUser.is_active // Preservar estado activo
     });
 
     if (!updatedUser) {
@@ -113,9 +113,9 @@ const deleteAccount = async (req, res) => {
 // Actualizar contraseña
 const updatePassword = async (req, res) => {
   try {
-    const { current_password, new_password } = req.body;
+    const { currentPassword, newPassword } = req.body;
 
-    if (!current_password || !new_password) {
+    if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'La contraseña actual y la nueva contraseña son requeridas' });
     }
 
@@ -125,13 +125,13 @@ const updatePassword = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    const isCurrentPasswordValid = await User.verifyPassword(current_password, user.password_hash);
+    const isCurrentPasswordValid = await User.verifyPassword(currentPassword, user.password_hash);
     if (!isCurrentPasswordValid) {
       return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
     }
 
     // Actualizar contraseña
-    await User.updatePassword(req.userId, new_password);
+    await User.updatePassword(req.userId, newPassword);
 
     res.json({ message: 'Contraseña actualizada exitosamente' });
 

@@ -10,13 +10,32 @@ const createTag = async (req, res) => {
 
     const existingTag = await Tag.findByName(name);
     if (existingTag) {
-      return res.status(409).json({ error: 'El tag ya existe' });
+      return res.json({ message: 'Tag ya existe', tag: existingTag });
     }
 
     const tag = await Tag.create({ name });
     res.status(201).json({ message: 'Tag creado exitosamente', tag });
   } catch (error) {
     console.error('Error creando tag:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+// Crear o encontrar tag por nombre
+const createOrFindTag = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'El nombre del tag es requerido' });
+    }
+
+    let tag = await Tag.findByName(name);
+    if (!tag) {
+      tag = await Tag.create({ name });
+    }
+    res.json({ tag });
+  } catch (error) {
+    console.error('Error creando o encontrando tag:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
@@ -91,6 +110,7 @@ const getTagsForService = async (req, res) => {
 
 module.exports = {
   createTag,
+  createOrFindTag,
   getTags,
   deleteTag,
   addTagToService,

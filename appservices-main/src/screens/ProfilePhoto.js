@@ -5,10 +5,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useUser } from '../contexts/UserContext';
+import { uploadProfileImage } from '../api/profile';
 
 const ProfilePhotoScreen = () => {
   const [image, setImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const navigation = useNavigation();
+  const { token } = useUser();
 
   // Pedir permiso y abrir galería
   const pickImage = async () => {
@@ -30,8 +34,19 @@ const ProfilePhotoScreen = () => {
   };
 
   // Confirmar y continuar con o sin imagen
-  const handleContinue = () => {
-    // Aquí podrías guardar la imagen en tu backend junto al usuario
+  const handleContinue = async () => {
+    if (image) {
+      setUploading(true);
+      try {
+        await uploadProfileImage(image, token);
+        Alert.alert('Éxito', 'Imagen de perfil subida correctamente');
+      } catch (error) {
+        Alert.alert('Error', error.message);
+        return; // Don't navigate if upload failed
+      } finally {
+        setUploading(false);
+      }
+    }
     navigation.replace('MainTabs');
   };
 
@@ -68,11 +83,13 @@ const ProfilePhotoScreen = () => {
 
         {/* Botones de acción */}
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-            <Text style={styles.continueText}>Guardar y continuar</Text>
+          <TouchableOpacity style={styles.continueButton} onPress={handleContinue} disabled={uploading}>
+            <Text style={styles.continueText}>
+              {uploading ? 'Subiendo...' : 'Guardar y continuar'}
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkip} disabled={uploading}>
             <Text style={styles.skipText}>Omitir este paso y crear cuenta</Text>
           </TouchableOpacity>
         </View>

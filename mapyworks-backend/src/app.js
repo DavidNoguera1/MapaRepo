@@ -21,7 +21,10 @@ const messagesRoutes = require('./routes/chatRoutes/messages'); // ← Nueva rut
 const app = express();
 
 // Middlewares globales
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins for development
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -36,9 +39,9 @@ app.use('/api/profile-images', profileImageRoutes); // ← Nueva ruta para imág
 app.use('/api/services', serviceRoutes); // ← Nueva ruta
 app.use('/api/tags', tagsRoutes); // ← Nueva ruta
 app.use('/api/reviews', reviewsRoutes); // ← Nueva ruta
-app.use('/api/services', serviceContactsRoutes); // ← Nueva ruta
+app.use('/api/service-contacts', serviceContactsRoutes); // ← Nueva ruta
 app.use('/api/service-covers', serviceCoversRoutes); // ← Nueva ruta para service covers
-app.use('/api/services', servicePhotosRoutes); // ← Nueva ruta para service photos
+app.use('/api/service-photos', servicePhotosRoutes); // ← Nueva ruta para service photos
 app.use('/api/chats', chatsRoutes); // ← Nueva ruta
 app.use('/api/messages', messagesRoutes); // ← Nueva ruta
 

@@ -21,30 +21,28 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleRegister = async () => {
-    // if (password !== confirmPassword) {
-    //   Alert.alert('Error', 'Las contraseñas no coinciden');
-    //   return;
-    // }
-    // if (!user_name || !email || !password) {
-    //   Alert.alert('Error', 'Por favor completa todos los campos obligatorios');
-    //   return;
-    // }
-    // try {
-    //   const data = await apiRegister({
-    //     user_name,
-    //     email,
-    //     password,
-    //     phone: telefono,
-    //     cedula,
-    //   });
-    //   await login(data.user, data.token);
-    //   // On success, navigate to MainTabs
-    //   navigation.replace('MainTabs');
-    // } catch (error) {
-    //   Alert.alert('Error', error.message);
-    // }
-
-    navigation.replace('ProfilePhoto');
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+    if (!user_name || !email || !password) {
+      Alert.alert('Error', 'Por favor completa todos los campos obligatorios');
+      return;
+    }
+    try {
+      const data = await apiRegister({
+        user_name,
+        email,
+        password,
+        phone: telefono,
+        cedula,
+      });
+      await login(data.user, data.token);
+      // On success, navigate to ProfilePhoto
+      navigation.replace('ProfilePhoto');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (

@@ -166,12 +166,26 @@ class Service {
   // Listar servicios por owner
   static async findByOwner(owner_id, limit = 10, offset = 0) {
     const query = `
-      SELECT id, owner_id, title, description, cover_image_url,
-             ST_AsText(location_geog) as location_text, address_text,
-             is_active, created_at, updated_at, avg_rating, reviews_count
-      FROM services
-      WHERE owner_id = $1
-      ORDER BY created_at DESC
+      SELECT s.id, s.owner_id, s.title, s.description, s.cover_image_url,
+             ST_AsText(s.location_geog) as location_text, s.address_text,
+             s.is_active, s.created_at, s.updated_at, s.avg_rating, s.reviews_count,
+             COALESCE(
+               JSON_AGG(
+                 JSON_BUILD_OBJECT(
+                   'id', t.id,
+                   'name', t.name
+                 )
+               ) FILTER (WHERE t.id IS NOT NULL),
+               '[]'::json
+             ) as tags
+      FROM services s
+      LEFT JOIN service_tags st ON s.id = st.service_id
+      LEFT JOIN tags t ON st.tag_id = t.id
+      WHERE s.owner_id = $1
+      GROUP BY s.id, s.owner_id, s.title, s.description, s.cover_image_url,
+               s.location_geog, s.address_text, s.is_active, s.created_at,
+               s.updated_at, s.avg_rating, s.reviews_count
+      ORDER BY s.created_at DESC
       LIMIT $2 OFFSET $3
     `;
 
@@ -187,6 +201,11 @@ class Service {
           service.lng = parseFloat(match[1]);
         }
         delete service.location_text;
+      }
+
+      // Parsear tags JSON
+      if (service.tags) {
+        service.tags = service.tags;
       }
     });
 

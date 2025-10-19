@@ -1,8 +1,8 @@
-// const API_BASE_URL = 'http://192.168.80.46:3001/api/users';
+import { API_BASE_URL } from './config';
 
 export async function getProfile(token) {
   try {
-    const response = await fetch(`${API_BASE_URL}/me`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -20,7 +20,7 @@ export async function getProfile(token) {
 
 export async function updateProfile(token, profileData) {
   try {
-    const response = await fetch(`${API_BASE_URL}/me`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export async function updateProfile(token, profileData) {
 
 export async function updatePassword(token, passwordData) {
   try {
-    const response = await fetch(`${API_BASE_URL}/me/password`, {
+    const response = await fetch(`${API_BASE_URL}/users/me/password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ export async function updatePassword(token, passwordData) {
 
 export async function deleteAccount(token) {
   try {
-    const response = await fetch(`${API_BASE_URL}/me`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
