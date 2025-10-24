@@ -13,6 +13,9 @@ router.post('/', chatsController.createChat);
 // Obtener chats del usuario
 router.get('/', chatsController.getUserChats);
 
+// Iniciar chat con un usuario específico
+router.post('/start-with/:userId', chatsController.startChatWithUser);
+
 // Obtener detalles de un chat (participante o admin)
 router.get('/:chatId', chatsController.checkChatParticipation, chatsController.getChatDetails);
 

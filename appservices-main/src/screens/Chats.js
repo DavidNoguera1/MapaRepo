@@ -1,69 +1,134 @@
-// Nota: La ruta "ChatDetail" debe estar registrada en el stack de navegación.
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
+import { useUser } from '../contexts/UserContext';
+import { getUserChats } from '../api/chats';
+import Toast from 'react-native-toast-message';
 
 const accent = '#1bc47d';
 const neutral = '#b0b7c3';
 
-const chats = [
-  {
-    id: '1',
-    name: 'Manitas Express',
-    preview: '¡Hola! ¿En qué te ayudo?',
-    time: '12:30',
-    unread: true,
-    avatar: null,
-  },
-  {
-    id: '2',
-    name: 'Taller El Rápido',
-    preview: 'Puedo pasar mañana',
-    time: 'Ayer',
-    unread: false,
-    avatar: null,
-  },
-];
-
 export default function Chats({ navigation }) {
+  const { token } = useUser();
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (token) loadChats();
+    }, [token])
+  );
+
+  const loadChats = async () => {
+    try {
+      setLoading(true);
+      const response = await getUserChats(token);
+      setChats(response.chats || []);
+    } catch (error) {
+      console.error('Error loading chats:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'No se pudieron cargar los chats',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadChats();
+    setRefreshing(false);
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    if (diff < 60000) return 'Ahora';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+    if (diff < 604800000) return date.toLocaleDateString('es-ES', { weekday: 'short' });
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.chatRow}
-      onPress={() => navigation.navigate('ChatScreen', { chatId: item.id, chatName: item.name })}
-      accessibilityLabel={`Open chat ${item.name}`}
+      style={styles.chatCard}
+      onPress={() =>
+        navigation.navigate('ChatScreen', {
+          chatId: item.id,
+          chatName: item.other_participant_name || item.creator_name || 'Chat',
+          participants: item.participants || [],
+        })
+      }
     >
       <View style={styles.avatarBox}>
-        {item.avatar ? (
-          <Image source={{ uri: item.avatar }} style={styles.avatarImg} />
-        ) : (
-          <Ionicons name="person-circle-outline" size={48} color={neutral} />
-        )}
-        {item.unread && <View style={styles.unreadDot} />}
+        <Ionicons name="person-circle-outline" size={56} color={accent} />
       </View>
-      <View style={styles.chatTextBox}>
-        <Text style={styles.chatName} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.chatPreview} numberOfLines={1} ellipsizeMode="tail">{item.preview}</Text>
-      </View>
-      <View style={styles.chatTimeBox}>
-        <Text style={styles.chatTime}>{item.time}</Text>
+
+      <View style={styles.chatContent}>
+        <View style={styles.chatTopRow}>
+        <Text style={styles.chatName} numberOfLines={1}>
+          {item.other_participant_name || item.creator_name || 'Chat'}
+        </Text>
+          <Text style={styles.chatTime}>
+            {item.last_message_time ? formatTime(item.last_message_time) : ''}
+          </Text>
+        </View>
+        <Text style={styles.chatPreview} numberOfLines={1}>
+          {item.last_message_content || 'Sin mensajes aún'}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="chatbubbles-outline" size={90} color={neutral} />
+      <Text style={styles.emptyTitle}>No hay conversaciones</Text>
+      <Text style={styles.emptySubtitle}>
+        Cuando inicies un chat con un prestador de servicios, aparecerá aquí.
+      </Text>
+    </View>
+  );
+
   return (
-  <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fcff' }}>
-      <LinearGradient colors={["#f9fcff", "#fff"]} style={styles.bg}>
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient colors={['#f9fcff', '#ffffff']} style={styles.bg}>
         <View style={styles.header}>
           <Text style={styles.title}>Chats</Text>
-          <Text style={styles.subtitle}>Conversaciones con prestadores de servicio</Text>
+          <Text style={styles.subtitle}>Tus conversaciones recientes</Text>
         </View>
+
         <FlatList
           data={chats}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={renderEmptyState}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[accent]}
+              tintColor={accent}
+            />
+          }
+          contentContainerStyle={
+            chats.length === 0 ? styles.emptyListContent : styles.listContent
+          }
           showsVerticalScrollIndicator={false}
         />
       </LinearGradient>
@@ -72,123 +137,104 @@ export default function Chats({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f9fcff',
+  },
   bg: {
     flex: 1,
-    paddingTop: 36,
-    paddingBottom: 0,
+    paddingTop: 20,
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 18,
-    backgroundColor: 'transparent',
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 2,
+    fontWeight: '800',
+    color: '#1e293b',
   },
   subtitle: {
     fontSize: 15,
-    color: '#7a8ca3',
-    marginBottom: 8,
+    color: '#64748b',
+    marginTop: 2,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 80,
+    paddingHorizontal: 18,
+    paddingBottom: 100,
   },
-  chatRow: {
+  chatCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 18,
-    marginBottom: 16,
+    marginBottom: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    shadowColor: '#eaf3ff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
     elevation: 2,
   },
   avatarBox: {
-    position: 'relative',
-    marginRight: 14,
-    width: 48,
-    height: 48,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 14,
+    backgroundColor: '#e6f7ee',
   },
-  avatarImg: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#eaf3ff',
-  },
-  unreadDot: {
-    position: 'absolute',
-    right: 2,
-    top: 2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: accent,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  chatTextBox: {
+  chatContent: {
     flex: 1,
     justifyContent: 'center',
+  },
+  chatTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   chatName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 2,
+    fontWeight: '700',
+    color: '#1e293b',
+    maxWidth: '70%',
   },
   chatPreview: {
     fontSize: 14,
-    color: '#b0b7c3',
-    marginBottom: 0,
-  },
-  chatTimeBox: {
-    alignItems: 'flex-end',
-    justifyContent: 'flex-start',
-    minWidth: 54,
+    color: '#7a8ca3',
+    marginTop: 3,
   },
   chatTime: {
-    fontSize: 13,
-    color: '#7a8ca3',
-    fontWeight: '500',
-  },
-  navBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#eaf3ff',
-    elevation: 8,
-    shadowColor: '#eaf3ff',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 6,
-  },
-  navItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  navLabel: {
     fontSize: 12,
-    color: neutral,
-    marginTop: 2,
-    fontWeight: '500',
+    color: '#94a3b8',
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    paddingTop: 100,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 10,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 20,
+  },
+  emptyListContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 100,
   },
 });
+

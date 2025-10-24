@@ -8,9 +8,10 @@ import GalleryModal from './GalleryModal';
 import ReviewsModal from './ReviewsModal';
 import { getServiceContacts, createServiceContact, updateServiceContact, deleteServiceContact } from '../../api/services';
 import { useUser } from '../../contexts/UserContext';
+import { startChatWithUser } from '../../api/chats';
 
 export default function ServiceDetailsModal({ visible, service, onClose, onEdit, onDelete }) {
-  const { token } = useUser();
+  const { token, user } = useUser();
   const [galleryVisible, setGalleryVisible] = useState(false);
   const [reviewsVisible, setReviewsVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
@@ -60,6 +61,37 @@ export default function ServiceDetailsModal({ visible, service, onClose, onEdit,
         return 'logo-whatsapp';
       default:
         return 'information-circle-outline';
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!user || !service) return;
+
+    // Verificar que no sea el dueño del servicio
+    if (service.owner_id === user.id) {
+      Toast.show({
+        type: 'error',
+        text1: 'No puedes iniciar chat',
+        text2: 'No puedes chatear contigo mismo',
+      });
+      return;
+    }
+
+    try {
+      const response = await startChatWithUser(token, service.owner_id, service.id);
+      Toast.show({
+        type: 'success',
+        text1: 'Chat iniciado',
+        text2: 'El chat se ha creado exitosamente',
+      });
+      onClose(); // Cerrar modal después de iniciar chat
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error al iniciar chat',
+        text2: 'No se pudo iniciar el chat',
+      });
     }
   };
 
@@ -196,6 +228,9 @@ export default function ServiceDetailsModal({ visible, service, onClose, onEdit,
             <Text style={styles.label}>Propietario:</Text>
             <Text style={styles.text}>{service.owner_name || 'No disponible'}</Text>
 
+            <Text style={styles.label}>Fecha de creación:</Text>
+            <Text style={styles.text}>{new Date(service.created_at).toLocaleDateString()}</Text>
+
             <TouchableOpacity
               style={styles.galleryButton}
               onPress={() => setGalleryVisible(true)}
@@ -211,25 +246,38 @@ export default function ServiceDetailsModal({ visible, service, onClose, onEdit,
               <Ionicons name="star-outline" size={18} color="#F59E0B" />
               <Text style={styles.reviewsButtonText}>Ver Reviews</Text>
             </TouchableOpacity>
+
+            {/* Botón Iniciar Chat - Solo si no es el dueño */}
+            {user && service.owner_id !== user.id && (
+              <TouchableOpacity
+                style={styles.startChatButton}
+                onPress={handleStartChat}
+              >
+                <Ionicons name="chatbubble-outline" size={18} color="#1bc47d" />
+                <Text style={styles.startChatButtonText}>Iniciar Chat</Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
 
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: '#3B82F6' }]}
-              onPress={() => onEdit(service)}
-            >
-              <Ionicons name="create-outline" size={18} color="#fff" />
-              <Text style={styles.btnText}>Editar</Text>
-            </TouchableOpacity>
+          {user && service.owner_id === user.id && (
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[styles.btn, { backgroundColor: '#3B82F6' }]}
+                onPress={() => onEdit(service)}
+              >
+                <Ionicons name="create-outline" size={18} color="#fff" />
+                <Text style={styles.btnText}>Editar</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: '#EF4444' }]}
-              onPress={() => handleDelete(service.id)}
-            >
-              <Ionicons name="trash-outline" size={18} color="#fff" />
-              <Text style={styles.btnText}>Eliminar</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[styles.btn, { backgroundColor: '#EF4444' }]}
+                onPress={() => handleDelete(service.id)}
+              >
+                <Ionicons name="trash-outline" size={18} color="#fff" />
+                <Text style={styles.btnText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
 
@@ -310,6 +358,19 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   reviewsButtonText: { color: '#F59E0B', fontWeight: 'bold', marginLeft: 8 },
+  startChatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  startChatButtonText: { color: '#1bc47d', fontWeight: 'bold', marginLeft: 8 },
   contactsContainer: {
     marginTop: 4,
   },

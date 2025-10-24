@@ -7,6 +7,7 @@ const servicesController = require('../../controllers/serviceControllers/service
 router.post('/', authenticateToken, servicesController.createService);
 router.get('/', servicesController.getServices);
 router.get('/me', authenticateToken, servicesController.getMyServices);
+router.get('/near-me', servicesController.getServicesNearMe);
 router.get('/:id', servicesController.getServiceById);
 router.put('/:id', authenticateToken, servicesController.checkOwnershipOrAdmin, servicesController.updateService);
 router.delete('/:id', authenticateToken, servicesController.checkOwnershipOrAdmin, servicesController.deleteService);

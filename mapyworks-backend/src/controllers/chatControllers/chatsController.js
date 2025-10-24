@@ -93,6 +93,48 @@ const getChatDetails = async (req, res) => {
   }
 };
 
+// Iniciar chat con un usuario específico (1-1)
+const startChatWithUser = async (req, res) => {
+  try {
+    const { userId: targetUserId } = req.params;
+    const { service_id } = req.body;
+
+    // No permitir iniciar chat consigo mismo
+    if (targetUserId === req.userId) {
+      return res.status(400).json({ error: 'No puedes iniciar un chat contigo mismo' });
+    }
+
+    // Verificar si ya existe un chat entre estos usuarios
+    const existingChat = await Chat.findExistingChat(req.userId, targetUserId, service_id);
+    if (existingChat) {
+      return res.status(200).json({
+        message: 'Chat ya existe',
+        chat: existingChat,
+        existed: true
+      });
+    }
+
+    // Crear nuevo chat
+    const chat = await Chat.create({
+      service_id,
+      created_by: req.userId
+    });
+
+    // Añadir participantes
+    await Chat.addParticipant(chat.id, req.userId);
+    await Chat.addParticipant(chat.id, targetUserId);
+
+    res.status(201).json({
+      message: 'Chat iniciado exitosamente',
+      chat,
+      existed: false
+    });
+  } catch (error) {
+    console.error('Error iniciando chat:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 // Eliminar chat (solo admin)
 const deleteChat = async (req, res) => {
   try {
@@ -114,6 +156,7 @@ module.exports = {
   createChat,
   getUserChats,
   getChatDetails,
+  startChatWithUser,
   deleteChat,
   checkChatParticipation
 };

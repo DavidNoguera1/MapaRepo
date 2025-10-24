@@ -26,6 +26,28 @@ export const serviceService = {
     };
   },
 
+  // Get services near a location
+  getServicesNearLocation: async (lat, lng, radiusKm = 10, limit = 10, offset = 0) => {
+    const params = new URLSearchParams({
+      lat: lat.toString(),
+      lng: lng.toString(),
+      radiusKm: radiusKm.toString(),
+      limit: limit.toString(),
+      offset: offset.toString()
+    });
+
+    const response = await api.get(`/services/near-me?${params}`);
+    // Map cover_image_url to full URL
+    const services = response.data.services.map(service => ({
+      ...service,
+      cover_image_url: getImageUrl(service.cover_image_url)
+    }));
+
+    return {
+      services
+    };
+  },
+
   // Get service by ID
   getServiceById: async (id) => {
     const response = await api.get(`/services/${id}`);

@@ -269,16 +269,15 @@ export async function deleteServiceContact(token, serviceId, contactId) {
 }
 
 // Obtener tags con búsqueda
-export async function getTags(token, query = '', limit = 20) {
+export async function getTags(token = null, query = '', limit = 20) {
   try {
     const url = query
       ? `${API_BASE_URL}/tags?q=${encodeURIComponent(query)}&limit=${limit}`
       : `${API_BASE_URL}/tags?limit=${limit}`;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers,
     });
     const data = await response.json();
     if (!response.ok) {
@@ -443,6 +442,41 @@ export async function deleteReview(token, reviewId) {
       throw new Error(data.error || 'Error al eliminar review');
     }
     return { message: 'Review eliminada exitosamente' };
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Obtener todos los servicios
+export async function getServices(limit = 10, offset = 0, search = '') {
+  try {
+    const url = search
+      ? `${API_BASE_URL}/services?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`
+      : `${API_BASE_URL}/services?limit=${limit}&offset=${offset}`;
+    const response = await fetch(url, {
+      method: 'GET',
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al obtener servicios');
+    }
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Obtener servicios cerca de una ubicación
+export async function getServicesNearMe(lat, lng, radiusKm = 10, limit = 10, offset = 0) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/services/near-me?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}&limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al obtener servicios cerca');
+    }
+    return data;
   } catch (error) {
     throw error;
   }

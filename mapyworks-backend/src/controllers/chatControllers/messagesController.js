@@ -18,36 +18,25 @@ const checkChatParticipation = async (req, res, next) => {
   }
 };
 
-// Enviar mensaje
+// Enviar mensaje (solo texto)
 const sendMessage = async (req, res) => {
   try {
     const { chatId } = req.params;
-    const {
-      content,
-      content_type = 'text',
-      file_url,
-      file_name,
-      file_size,
-      thumbnail_url,
-      duration,
-      metadata
-    } = req.body;
+    const { content } = req.body;
 
-    if (!content && !file_url) {
-      return res.status(400).json({ error: 'Se requiere contenido o archivo' });
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      return res.status(400).json({ error: 'Se requiere contenido de texto válido' });
+    }
+
+    if (content.length > 1000) {
+      return res.status(400).json({ error: 'El mensaje no puede exceder 1000 caracteres' });
     }
 
     const message = await Message.create({
       chat_id: chatId,
       sender_id: req.userId,
-      content,
-      content_type,
-      file_url,
-      file_name,
-      file_size,
-      thumbnail_url,
-      duration,
-      metadata
+      content: content.trim(),
+      content_type: 'text'
     });
 
     // Actualizar last_message_at del chat

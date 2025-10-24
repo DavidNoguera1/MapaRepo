@@ -35,12 +35,18 @@ class Chat {
   static async findByUserId(user_id, limit = 20, offset = 0) {
     const query = `
       SELECT c.*, u.user_name as creator_name,
+             other_u.user_name as other_participant_name,
              m.content as last_message_content,
              m.created_at as last_message_time,
              m.sender_id as last_message_sender
       FROM chats c
       JOIN chat_participants cp ON c.id = cp.chat_id
       LEFT JOIN users u ON c.created_by = u.id
+      LEFT JOIN users other_u ON other_u.id = (
+        SELECT cp2.user_id FROM chat_participants cp2
+        WHERE cp2.chat_id = c.id AND cp2.user_id != $1
+        LIMIT 1
+      )
       LEFT JOIN (
         SELECT DISTINCT ON (chat_id) chat_id, content, created_at, sender_id
         FROM messages

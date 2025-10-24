@@ -117,6 +117,29 @@ const Mapa = () => {
     }
   };
 
+  // Load services near zone center when zone changes
+  const loadServicesNearZone = async () => {
+    if (!zoneCenter) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await serviceService.getServicesNearLocation(
+        zoneCenter.lat,
+        zoneCenter.lng,
+        zoneRadius / 1000, // Convert to km
+        1000,
+        0
+      );
+      setServices(response.services);
+    } catch (err) {
+      setError('Error al cargar los servicios cercanos');
+      console.error('Error loading services near zone:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Get user current location
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -191,8 +214,20 @@ const Mapa = () => {
   const handleLocationFound = useCallback((coords, source) => {
     if (source === 'click') {
       setZoneCenter(coords);
+      // Save to localStorage cache
+      localStorage.setItem('cachedLat', coords.lat.toString());
+      localStorage.setItem('cachedLng', coords.lng.toString());
+      // Load services near new zone center
+      loadServicesNearZone();
     }
-  }, []);
+  }, [zoneRadius]);
+
+  // Effect to load services when zone center or radius changes
+  useEffect(() => {
+    if (zoneCenter && !showAllServices) {
+      loadServicesNearZone();
+    }
+  }, [zoneCenter, zoneRadius, showAllServices]);
 
   // Calculate distance between two points using Haversine formula
   const calculateDistance = (point1, point2) => {
@@ -260,7 +295,14 @@ const Mapa = () => {
               <input
                 type="checkbox"
                 checked={showAllServices}
-                onChange={(e) => setShowAllServices(e.target.checked)}
+                onChange={(e) => {
+                  setShowAllServices(e.target.checked);
+                  if (e.target.checked) {
+                    loadServices(); // Load all services when checkbox is checked
+                  } else if (zoneCenter) {
+                    loadServicesNearZone(); // Load services near zone when unchecked and zone exists
+                  }
+                }}
                 className="show-all-checkbox"
               />
               Ver todos los servicios (sin zona de interés)

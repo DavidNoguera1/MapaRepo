@@ -334,6 +334,61 @@ class Service {
     const result = await pool.query(query, values);
     return result.rows[0];
   }
+
+  // Buscar servicios cerca de una ubicación
+  static async findNearLocation(lat, lng, radiusKm = 10, limit = 10, offset = 0) {
+    const query = `
+      SELECT s.id, s.owner_id, s.title, s.description, s.cover_image_url,
+             ST_AsText(s.location_geog) as location_text, s.address_text,
+             s.is_active, s.created_at, s.updated_at, s.avg_rating, s.reviews_count,
+             u.user_name as owner_name,
+             ST_Distance(s.location_geog, ST_GeomFromText('POINT(${lng} ${lat})', 4326)) / 1000 as distance_km,
+             COALESCE(
+               JSON_AGG(
+                 JSON_BUILD_OBJECT(
+                   'id', t.id,
+                   'name', t.name
+                 )
+               ) FILTER (WHERE t.id IS NOT NULL),
+               '[]'::json
+             ) as tags
+      FROM services s
+      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN service_tags st ON s.id = st.service_id
+      LEFT JOIN tags t ON st.tag_id = t.id
+      WHERE s.is_active = true
+        AND ST_DWithin(s.location_geog, ST_GeomFromText('POINT(${lng} ${lat})', 4326), ${radiusKm * 1000})
+      GROUP BY s.id, s.owner_id, s.title, s.description, s.cover_image_url,
+               s.location_geog, s.address_text, s.is_active, s.created_at,
+               s.updated_at, s.avg_rating, s.reviews_count, u.user_name
+      ORDER BY ST_Distance(s.location_geog, ST_GeomFromText('POINT(${lng} ${lat})', 4326)) ASC
+      LIMIT $1 OFFSET $2
+    `;
+
+    const values = [limit, offset];
+
+    const result = await pool.query(query, values);
+    const services = result.rows;
+
+    // Parsear locations y tags
+    services.forEach(service => {
+      if (service.location_text) {
+        const match = service.location_text.match(/POINT\(([^ ]+) ([^)]+)\)/);
+        if (match) {
+          service.lat = parseFloat(match[2]);
+          service.lng = parseFloat(match[1]);
+        }
+        delete service.location_text;
+      }
+
+      // Parsear tags JSON
+      if (service.tags) {
+        service.tags = service.tags;
+      }
+    });
+
+    return services;
+  }
 }
 
 module.exports = Service;

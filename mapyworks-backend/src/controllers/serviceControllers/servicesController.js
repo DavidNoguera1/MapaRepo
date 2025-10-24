@@ -135,6 +135,30 @@ const getMyServices = async (req, res) => {
   }
 };
 
+// Obtener servicios cerca de una ubicación
+const getServicesNearMe = async (req, res) => {
+  try {
+    const { lat, lng, radiusKm = 10, limit = 10, offset = 0 } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Latitud y longitud son requeridas' });
+    }
+
+    const services = await Service.findNearLocation(
+      parseFloat(lat),
+      parseFloat(lng),
+      parseFloat(radiusKm),
+      parseInt(limit),
+      parseInt(offset)
+    );
+
+    res.json({ services });
+  } catch (error) {
+    console.error('Error obteniendo servicios cerca:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 // Actualizar servicio
 const updateService = async (req, res) => {
   try {
@@ -187,6 +211,7 @@ module.exports = {
   getServices,
   getServiceById,
   getMyServices,
+  getServicesNearMe,
   updateService,
   deleteService,
   checkOwnershipOrAdmin,

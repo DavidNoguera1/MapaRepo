@@ -1,268 +1,384 @@
-import React, { useState } from 'react';
-import { 
-  View, Text, TextInput, FlatList, TouchableOpacity, 
-  Image, StyleSheet, Modal, ScrollView 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
 } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getServices, getTags } from '../api/services';
+import { useUser } from '../contexts/UserContext';
+import { SERVER_BASE_URL } from '../api/config';
+import ServiceDetailsModal from './components/ServiceDetailsModal';
 
-const SearchSection = () => {
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 60) / 2;
+
+export default function Home() {
+  const { user } = useUser();
+  const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [services, setServices] = useState([]);
+  const [allServices, setAllServices] = useState([]);
+  const [zoneCenter, setZoneCenter] = useState(null);
+  const [zoneRadius] = useState(1000);
   const [query, setQuery] = useState('');
-  const [filteredServices, setFilteredServices] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [tagSuggestions, setTagSuggestions] = useState([]);
+  const [tagSearchQuery, setTagSearchQuery] = useState('');
   const [selectedService, setSelectedService] = useState(null);
+  const [serviceDetailsVisible, setServiceDetailsVisible] = useState(false);
 
-  const newServices = [
-    {
-      title: 'Manitas Express',
-      desc: 'Instalaciones y arreglos en el día.',
-      price: '$50.000',
-      image: 'https://placekitten.com/400/300',
-      tags: ['arreglos', 'hogar'],
-      location: 'Medellín',
-      contact: '3104567890',
-      email: 'manitas@correo.com',
-      date: '2025-10-18',
-    },
-    {
-      title: 'Taller El Rápido',
-      desc: 'Mecánica ligera a domicilio.',
-      price: '$80.000',
-      image: 'https://placekitten.com/401/300',
-      tags: ['mecánica', 'autos'],
-      location: 'Bogotá',
-      contact: '3119876543',
-      email: 'taller@correo.com',
-      date: '2025-10-17',
-    },
-    {
-      title: 'Belleza Total',
-      desc: 'Cortes, tintes y maquillaje profesional.',
-      price: '$100.000',
-      image: 'https://placekitten.com/402/300',
-      tags: ['belleza', 'spa'],
-      location: 'Cali',
-      contact: '3126549870',
-      email: 'belleza@correo.com',
-      date: '2025-10-16',
-    },
-  ];
+  useEffect(() => {
+    loadCachedLocation();
+    requestLocationPermission();
+    loadTags();
+    loadServices();
+  }, []);
 
-  const categories = [
-    { title: 'Hogar', icon: 'home-outline', color: '#60a5fa' },
-    { title: 'Autos', icon: 'car-outline', color: '#f97316' },
-    { title: 'Tecnología', icon: 'laptop-outline', color: '#10b981' },
-    { title: 'Belleza', icon: 'cut-outline', color: '#ec4899' },
-    { title: 'Construcción', icon: 'hammer-outline', color: '#facc15' },
-  ];
-
-  const handleSearch = (text) => {
-    setQuery(text);
-    const filtered = newServices.filter(
-      (service) =>
-        service.title.toLowerCase().includes(text.toLowerCase()) ||
-        service.desc.toLowerCase().includes(text.toLowerCase()) ||
-        service.tags.some((tag) => tag.toLowerCase().includes(text.toLowerCase())) ||
-        service.location.toLowerCase().includes(text.toLowerCase())
-    );
-    setFilteredServices(filtered);
+  const loadCachedLocation = async () => {
+    try {
+      const cachedLat = await AsyncStorage.getItem('cachedLat');
+      const cachedLng = await AsyncStorage.getItem('cachedLng');
+      if (cachedLat && cachedLng) {
+        setZoneCenter({
+          latitude: parseFloat(cachedLat),
+          longitude: parseFloat(cachedLng),
+        });
+      }
+    } catch (error) {
+      console.error('Error loading cached location:', error);
+    }
   };
 
-  const recentServices = [...newServices].sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
-  );
+  const requestLocationPermission = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permiso de ubicación denegado');
+        setLoading(false);
+        return;
+      }
+      let loc = await Location.getCurrentPositionAsync({});
+      const coords = {
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      };
+      setLocation(coords);
+      setZoneCenter(coords);
+      await AsyncStorage.setItem('cachedLat', coords.latitude.toString());
+      await AsyncStorage.setItem('cachedLng', coords.longitude.toString());
+      setLoading(false);
+    } catch (error) {
+      setErrorMsg('Error obteniendo ubicación');
+      setLoading(false);
+    }
+  };
+
+  const loadServices = async () => {
+    setLoading(true);
+    try {
+      const data = await getServices(100, 0, '');
+      setServices(data.services || []);
+      setAllServices(data.services || []);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudieron cargar los servicios');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTags = async () => {
+    try {
+      const data = await getTags(user.token);
+      setAvailableTags(data.tags || []);
+    } catch (error) {
+      console.error('Error loading tags:', error);
+    }
+  };
+
+  const addTag = (tag) => {
+    if (!selectedTags.includes(tag.id)) {
+      setSelectedTags((prev) => [...prev, tag.id]);
+    }
+    setTagInput('');
+    setShowTagSuggestions(false);
+  };
+
+  const removeTag = (tagId) => {
+    setSelectedTags((prev) => prev.filter((id) => id !== tagId));
+  };
+
+  const filteredServices = services.filter((service) => {
+    const matchesSearch = query === '' || (service.title || '').toLowerCase().includes(query.toLowerCase());
+    const matchesTags = selectedTags.length === 0 || selectedTags.some((tagId) => service.tags?.some((tag) => tag.id === tagId));
+    return matchesSearch && matchesTags;
+  });
+
+  const filteredRecentServices = allServices
+    .filter((service) => {
+      const matchesSearch = query === '' || (service.title || '').toLowerCase().includes(query.toLowerCase());
+      const matchesTags = selectedTags.length === 0 || selectedTags.some((tagId) => service.tags?.some((tag) => tag.id === tagId));
+      return matchesSearch && matchesTags;
+    })
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const nearbyServices = filteredServices.slice(0, 4);
+  const recentServices = filteredRecentServices.slice(0, 8);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1bc47d" />
+        <Text style={styles.loadingText}>Cargando servicios...</Text>
+      </View>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>{errorMsg}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Encabezado y barra de búsqueda */}
-      <Text style={styles.welcomeText}>Bienvenido de vuelta, Usuario</Text>
-      <Text style={styles.appTitle}>Apprueba</Text>
-      <Text style={styles.subtitle}>Descubre lo que tus alrededores tienen para ofrecerte</Text>
+      <View style={styles.header}>
+        <Text style={styles.welcomeText}>Bienvenido de vuelta 👋</Text>
+        <Text style={styles.appTitle}>ServiMapa</Text>
+        <Text style={styles.subtitle}>Descubre y conecta con servicios cerca de ti</Text>
+      </View>
 
-      <View style={styles.searchBarContainer}>
+      <View style={styles.searchContainer}>
+        <Feather name="search" size={20} color="#9aa5b1" style={styles.searchIcon} />
         <TextInput
           style={styles.searchBar}
           placeholder="Buscar servicios, oficios..."
-          placeholderTextColor="#b0b7c3"
+          placeholderTextColor="#9aa5b1"
           value={query}
-          onChangeText={handleSearch}
+          onChangeText={setQuery}
         />
-        <Feather name="search" size={22} color="#b0b7c3" style={styles.searchIcon} />
+        <Text style={styles.tagsTitle}>Filtrar por tags:</Text>
+
+        <TextInput
+          style={styles.tagSearchBar}
+          placeholder="Escribir tag a buscar"
+          placeholderTextColor="#9aa5b1"
+          value={tagSearchQuery}
+          onChangeText={setTagSearchQuery}
+        />
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.availableTagsScroll}>
+          {availableTags.filter(tag => tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())).map((tag) => (
+            <TouchableOpacity
+              key={tag.id}
+              style={[styles.availableTagChip, selectedTags.includes(tag.id) && styles.availableTagChipSelected]}
+              onPress={() => (selectedTags.includes(tag.id) ? removeTag(tag.id) : addTag(tag))}
+            >
+              <Text style={[styles.availableTagText, selectedTags.includes(tag.id) && styles.availableTagTextSelected]}>
+                {tag.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
-      {/* Resultados de búsqueda */}
-      {query.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>Resultados</Text>
-          <FlatList
-            data={filteredServices}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => setSelectedService(item)} style={styles.card}>
-                <Image source={{ uri: item.image }} style={styles.image} />
-                <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.cardDesc}>{item.desc}</Text>
-                  <Text style={styles.cardPrice}>{item.price}</Text>
-                  <Text style={styles.cardLocation}>📍 {item.location}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <Text style={styles.noResults}>No se encontraron servicios</Text>
-            }
-          />
-        </>
-      )}
-
-      {/* Categorías */}
-      <View style={styles.categorySection}>
-        <Text style={styles.sectionTitle}>Categorías populares</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Servicios Cercanos</Text>
         <FlatList
           horizontal
-          data={categories}
-          keyExtractor={(item, index) => index.toString()}
+          data={nearbyServices}
+          keyExtractor={(item) => item.id.toString()}
           showsHorizontalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity style={[styles.categoryCard, { backgroundColor: item.color + '20' }]}>
-              <Ionicons name={item.icon} size={26} color={item.color} />
-              <Text style={[styles.categoryText, { color: item.color }]}>{item.title}</Text>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => {
+                setSelectedService(item);
+                setServiceDetailsVisible(true);
+              }}
+            >
+              <Image
+                source={{
+                  uri: item.cover_image_url
+                    ? `${SERVER_BASE_URL}${item.cover_image_url}`
+                    : 'https://via.placeholder.com/150x100?text=No+Image',
+                }}
+                style={styles.cardImage}
+                resizeMode="cover"
+              />
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                  {item.title}
+                </Text>
+                <Text style={styles.cardDesc} numberOfLines={2}>
+                  {item.description}
+                </Text>
+                <View style={styles.tagsRow}>
+                  {item.tags?.slice(0, 2).map((tag) => (
+                    <View key={tag.id} style={styles.smallTag}>
+                      <Text style={styles.smallTagText}>{tag.name}</Text>
+                    </View>
+                  ))}
+                </View>
+                <Text style={styles.cardLocation} numberOfLines={1}>
+                  📍 {item.address_text}
+                </Text>
+              </View>
             </TouchableOpacity>
           )}
         />
       </View>
 
-      {/* Nuevos servicios agregados */}
-      <View style={styles.recentSection}>
-        <Text style={styles.sectionTitle}>Nuevos servicios agregados</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Servicios Añadidos Recientemente</Text>
         <FlatList
-          horizontal
           data={recentServices}
-          keyExtractor={(item, index) => index.toString()}
-          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => setSelectedService(item)} style={styles.recentCard}>
-              <Image source={{ uri: item.image }} style={styles.recentImage} />
-              <Text style={styles.recentTitle}>{item.title}</Text>
-              <Text style={styles.recentPrice}>{item.price}</Text>
+            <TouchableOpacity
+              style={styles.gridCard}
+              onPress={() => {
+                setSelectedService(item);
+                setServiceDetailsVisible(true);
+              }}
+            >
+              <Image
+                source={{
+                  uri: item.cover_image_url
+                    ? `${SERVER_BASE_URL}${item.cover_image_url}`
+                    : 'https://via.placeholder.com/150x100?text=No+Image',
+                }}
+                style={styles.gridImage}
+                resizeMode="cover"
+              />
+              <Text style={styles.gridTitle} numberOfLines={1}>
+                {item.title}
+              </Text>
+              <View style={styles.tagsRow}>
+                {item.tags?.slice(0, 2).map((tag) => (
+                  <View key={tag.id} style={styles.smallTag}>
+                    <Text style={styles.smallTagText}>{tag.name}</Text>
+                  </View>
+                ))}
+              </View>
             </TouchableOpacity>
           )}
         />
       </View>
 
-      {/* Modal de detalles */}
-      <Modal visible={!!selectedService} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{selectedService?.title}</Text>
-              <TouchableOpacity onPress={() => setSelectedService(null)}>
-                <Ionicons name="close" size={24} color="#475569" />
-              </TouchableOpacity>
-            </View>
-
-            <Image source={{ uri: selectedService?.image }} style={styles.modalImage} />
-            <Text style={styles.modalDesc}>{selectedService?.desc}</Text>
-            <Text style={styles.modalPrice}>{selectedService?.price}</Text>
-            <Text style={styles.modalLocation}>📍 {selectedService?.location}</Text>
-
-            <View style={styles.tagContainer}>
-              {selectedService?.tags.map((tag, index) => (
-                <View key={index} style={styles.tag}>
-                  <Text style={styles.tagText}>#{tag}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.contactSection}>
-              <Text style={styles.contactTitle}>Contacto</Text>
-              <Text style={styles.contactText}>📞 {selectedService?.contact}</Text>
-              <Text style={styles.contactText}>✉️ {selectedService?.email}</Text>
-
-              <TouchableOpacity style={styles.chatButton}>
-                <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
-                <Text style={styles.chatButtonText}>Chatear</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <ServiceDetailsModal
+        visible={serviceDetailsVisible}
+        service={selectedService}
+        onClose={() => {
+          setServiceDetailsVisible(false);
+          setSelectedService(null);
+        }}
+      />
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  welcomeText: { fontSize: 18, color: '#333' },
-  appTitle: { fontSize: 26, fontWeight: 'bold', marginVertical: 5 },
-  subtitle: { color: '#777', marginBottom: 15 },
-  searchBarContainer: { position: 'relative', marginBottom: 15 },
+  container: { padding: 20, backgroundColor: '#f9fcff' },
+  header: { marginBottom: 20 },
+  welcomeText: { fontSize: 18, color: '#1e293b', fontWeight: '500' },
+  appTitle: { fontSize: 28, fontWeight: '800', color: '#1bc47d', marginTop: 4 },
+  subtitle: { color: '#64748b', marginTop: 2 },
+
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fcff' },
+  loadingText: { marginTop: 10, fontSize: 16, color: '#64748b' },
+
+  searchContainer: { position: 'relative', marginBottom: 16 },
   searchBar: {
     backgroundColor: '#fff',
-    borderRadius: 24,
+    borderRadius: 20,
     paddingVertical: 10,
-    paddingHorizontal: 44,
+    paddingHorizontal: 40,
     fontSize: 15,
     color: '#222',
-    shadowColor: '#eaf3ff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
     borderWidth: 1,
-    borderColor: '#eaf3ff',
+    borderColor: '#e6eef5',
+    elevation: 2,
   },
   searchIcon: { position: 'absolute', left: 16, top: 12 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 10, color: '#1E293B' },
 
-  // Categorías
-  categorySection: { marginTop: 20 },
-  categoryCard: {
-    alignItems: 'center',
-    borderRadius: 14,
-    padding: 14,
-    marginRight: 12,
-    minWidth: 90,
-  },
-  categoryText: { marginTop: 6, fontSize: 14, fontWeight: '600' },
-
-  // Nuevos servicios
-  recentSection: { marginTop: 20 },
-  recentCard: {
+  tagsTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e293b', marginTop: 14, marginBottom: 8 },
+  tagSearchBar: {
     backgroundColor: '#fff',
-    borderRadius: 14,
-    marginRight: 12,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    fontSize: 15,
+    color: '#222',
+    borderWidth: 1,
+    borderColor: '#e6eef5',
+    elevation: 2,
+    marginBottom: 8,
+  },
+  availableTagsScroll: { flexDirection: 'row' },
+  availableTagChip: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  availableTagChipSelected: { backgroundColor: '#1bc47d' },
+  availableTagText: { fontSize: 14, color: '#222' },
+  availableTagTextSelected: { color: 'white' },
+
+  section: { marginTop: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#1e293b', marginBottom: 12 },
+
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginRight: 14,
+    width: 200,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  cardImage: { width: '100%', height: 110 },
+  cardContent: { padding: 10 },
+  cardTitle: { fontSize: 15, fontWeight: '700', color: '#222' },
+  cardDesc: { fontSize: 13, color: '#64748b', marginVertical: 4 },
+  cardLocation: { color: '#1bc47d', fontSize: 12, marginTop: 2 },
+  tagsRow: { flexDirection: 'row', flexWrap: 'nowrap', marginTop: 4, overflow: 'hidden' },
+  smallTag: {
+    backgroundColor: '#e0f2fe',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginRight: 4,
+  },
+  smallTagText: { fontSize: 10, color: '#1bc47d', fontWeight: '500' },
+
+  gridCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 14,
+    width: CARD_WIDTH,
     padding: 10,
     elevation: 3,
-    width: 160,
   },
-  recentImage: { width: '100%', height: 100, borderRadius: 10 },
-  recentTitle: { fontWeight: 'bold', marginTop: 6, color: '#333' },
-  recentPrice: { color: '#16a34a', fontWeight: 'bold', marginTop: 2 },
-
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#fff', borderRadius: 16, padding: 20, width: '90%', maxHeight: '80%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', color: '#1E293B' },
-  modalImage: { width: '100%', height: 180, borderRadius: 12, marginBottom: 10 },
-  modalDesc: { color: '#475569', fontSize: 15, marginBottom: 8 },
-  modalPrice: { fontWeight: 'bold', fontSize: 16, color: '#16a34a' },
-  modalLocation: { color: '#555', fontStyle: 'italic', marginBottom: 10 },
-  tagContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 },
-  tag: { backgroundColor: '#e0f2fe', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, margin: 4 },
-  tagText: { color: '#0369a1', fontSize: 12 },
-  contactSection: { marginTop: 10 },
-  contactTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 6, color: '#1E293B' },
-  contactText: { color: '#475569', fontSize: 14, marginBottom: 4 },
-  chatButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginTop: 10,
-    alignSelf: 'flex-start',
-  },
-  chatButtonText: { color: '#fff', marginLeft: 6, fontWeight: 'bold' },
+  gridImage: { width: '100%', height: 110, borderRadius: 10 },
+  gridTitle: { fontWeight: '700', color: '#1e293b', marginTop: 6, fontSize: 14 },
 });
-
-export default SearchSection;

@@ -41,7 +41,7 @@ const Login = () => {
           <View style={styles.iconContainer}>
             {/* Aquí puedes poner tu icono, por ejemplo usando react-native-vector-icons */}
           </View>
-          <Text style={styles.title}>Apprueba</Text>
+          <Text style={styles.title}>ServiMapa</Text>
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.buttonActive}>
               <Text style={styles.buttonTextActive}>Iniciar Sesión</Text>

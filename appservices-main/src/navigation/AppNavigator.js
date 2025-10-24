@@ -5,7 +5,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 
 import Home from '../screens/Home';
 import Chats from '../screens/Chats';
-import ChatScreen from '../screens/ChatScreen';
+import ChatScreen from '../screens/ChatComponents/ChatScreen';
 import Map from '../screens/Map';
 import Myservices from '../screens/Myservices';
 import Settings from '../screens/Settings';

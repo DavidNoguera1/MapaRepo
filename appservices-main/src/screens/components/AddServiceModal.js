@@ -465,112 +465,122 @@ export default function AddServiceModal({ visible, onClose, onSave, isEditing = 
               <Text style={styles.btnText}>{form.cover_image_url ? 'Cambiar Foto de Portada' : 'Seleccionar Foto de Portada'}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.galleryButton}
-              onPress={() => {
-                if (!existingService?.id) {
-                  alert('Guarda el servicio primero antes de gestionar la galería.');
-                  return;
-                }
-                setGalleryVisible(true);
-              }}
-            >
-              <Ionicons name="images-outline" size={18} color="#3B82F6" />
-              <Text style={styles.galleryButtonText}>Gestionar Galería de Fotos</Text>
-            </TouchableOpacity>
-
-            {form.cover_image_url && <Image source={{ uri: form.cover_image_url }} style={styles.coverPhoto} />}
-
-            <Text style={styles.label}>Contactos</Text>
-            <TouchableOpacity style={styles.addContactButton} onPress={() => setShowContactForm(true)}>
-              <Ionicons name="add" size={20} color="#fff" />
-              <Text style={styles.addContactText}>Añadir Contacto</Text>
-            </TouchableOpacity>
-
-            {contacts.map((contact) => (
-              <View key={contact.id} style={styles.contactItem}>
-                <Ionicons name={getContactIcon(contact.contact_type)} size={20} color="#10B981" />
-                <View style={styles.contactInfo}>
-                  <Text style={styles.contactValue}>{contact.contact_value}</Text>
-                  {contact.label && <Text style={styles.contactLabel}>{contact.label}</Text>}
-                </View>
-                <TouchableOpacity onPress={() => deleteContact(contact.id)}>
-                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+            {isEditing ? (
+              <>
+                <TouchableOpacity
+                  style={styles.galleryButton}
+                  onPress={() => {
+                    if (!existingService?.id) {
+                      alert('Guarda el servicio primero antes de gestionar la galería.');
+                      return;
+                    }
+                    setGalleryVisible(true);
+                  }}
+                >
+                  <Ionicons name="images-outline" size={18} color="#3B82F6" />
+                  <Text style={styles.galleryButtonText}>Gestionar Galería de Fotos</Text>
                 </TouchableOpacity>
-              </View>
-            ))}
 
-            {showContactForm && (
-              <View style={styles.contactForm}>
-                <Text style={styles.subLabel}>Tipo de contacto</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.contactTypeScrollContainer}>
-                  <View style={styles.contactTypeContainer}>
-                    {[
-                      { key: 'phone', label: 'Teléfono' },
-                      { key: 'email', label: 'Email' },
-                      { key: 'whatsapp', label: 'WhatsApp' },
-                      { key: 'facebook', label: 'Facebook' },
-                      { key: 'instagram', label: 'Instagram' },
-                      { key: 'enlace', label: 'Enlace' },
-                      { key: 'otros', label: 'Otros' },
-                    ].map(({ key, label }) => (
-                      <TouchableOpacity
-                        key={key}
-                        style={[
-                          styles.contactTypeButton,
-                          contactInput.contact_type === key && styles.contactTypeButtonActive,
-                        ]}
-                        onPress={() => setContactInput(prev => ({ ...prev, contact_type: key }))}
-                      >
-                        <Ionicons name={getContactIcon(key)} size={16} color={contactInput.contact_type === key ? '#fff' : '#10B981'} />
-                        <Text style={[
-                          styles.contactTypeText,
-                          contactInput.contact_type === key && styles.contactTypeTextActive,
-                        ]}>
-                          {label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                <Text style={styles.label}>Contactos</Text>
+                <TouchableOpacity style={styles.addContactButton} onPress={() => setShowContactForm(true)}>
+                  <Ionicons name="add" size={20} color="#fff" />
+                  <Text style={styles.addContactText}>Añadir Contacto</Text>
+                </TouchableOpacity>
+
+                {contacts.map((contact) => (
+                  <View key={contact.id} style={styles.contactItem}>
+                    <Ionicons name={getContactIcon(contact.contact_type)} size={20} color="#10B981" />
+                    <View style={styles.contactInfo}>
+                      <Text style={styles.contactValue}>{contact.contact_value}</Text>
+                      {contact.label && <Text style={styles.contactLabel}>{contact.label}</Text>}
+                    </View>
+                    <TouchableOpacity onPress={() => deleteContact(contact.id)}>
+                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                    </TouchableOpacity>
                   </View>
-                </ScrollView>
+                ))}
 
-                <TextInput
-                  style={styles.input}
-                  placeholder={
-                    contactInput.contact_type === 'email' ? 'correo@ejemplo.com' :
-                    contactInput.contact_type === 'phone' ? '+52 55 1234 5678' :
-                    contactInput.contact_type === 'whatsapp' ? 'Número de WhatsApp' :
-                    contactInput.contact_type === 'facebook' ? 'https://facebook.com/tu-pagina' :
-                    contactInput.contact_type === 'instagram' ? 'https://instagram.com/tu-usuario' :
-                    contactInput.contact_type === 'enlace' ? 'https://tu-sitio-web.com' :
-                    'Información de contacto'
-                  }
-                  value={contactInput.contact_value}
-                  onChangeText={(value) => setContactInput(prev => ({ ...prev, contact_value: value }))}
-                  keyboardType={
-                    contactInput.contact_type === 'email' ? 'email-address' :
-                    contactInput.contact_type === 'phone' ? 'phone-pad' :
-                    'default'
-                  }
-                />
+                {showContactForm && (
+                  <View style={styles.contactForm}>
+                    <Text style={styles.subLabel}>Tipo de contacto</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.contactTypeScrollContainer}>
+                      <View style={styles.contactTypeContainer}>
+                        {[
+                          { key: 'phone', label: 'Teléfono' },
+                          { key: 'email', label: 'Email' },
+                          { key: 'whatsapp', label: 'WhatsApp' },
+                          { key: 'facebook', label: 'Facebook' },
+                          { key: 'instagram', label: 'Instagram' },
+                          { key: 'enlace', label: 'Enlace' },
+                          { key: 'otros', label: 'Otros' },
+                        ].map(({ key, label }) => (
+                          <TouchableOpacity
+                            key={key}
+                            style={[
+                              styles.contactTypeButton,
+                              contactInput.contact_type === key && styles.contactTypeButtonActive,
+                            ]}
+                            onPress={() => setContactInput(prev => ({ ...prev, contact_type: key }))}
+                          >
+                            <Ionicons name={getContactIcon(key)} size={16} color={contactInput.contact_type === key ? '#fff' : '#10B981'} />
+                            <Text style={[
+                              styles.contactTypeText,
+                              contactInput.contact_type === key && styles.contactTypeTextActive,
+                            ]}>
+                              {label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </ScrollView>
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Etiqueta (opcional)"
-                  value={contactInput.label}
-                  onChangeText={(value) => setContactInput(prev => ({ ...prev, label: value }))}
-                />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={
+                        contactInput.contact_type === 'email' ? 'correo@ejemplo.com' :
+                        contactInput.contact_type === 'phone' ? '+52 55 1234 5678' :
+                        contactInput.contact_type === 'whatsapp' ? 'Número de WhatsApp' :
+                        contactInput.contact_type === 'facebook' ? 'https://facebook.com/tu-pagina' :
+                        contactInput.contact_type === 'instagram' ? 'https://instagram.com/tu-usuario' :
+                        contactInput.contact_type === 'enlace' ? 'https://tu-sitio-web.com' :
+                        'Información de contacto'
+                      }
+                      value={contactInput.contact_value}
+                      onChangeText={(value) => setContactInput(prev => ({ ...prev, contact_value: value }))}
+                      keyboardType={
+                        contactInput.contact_type === 'email' ? 'email-address' :
+                        contactInput.contact_type === 'phone' ? 'phone-pad' :
+                        'default'
+                      }
+                    />
 
-                <View style={styles.contactFormButtons}>
-                  <TouchableOpacity style={styles.cancelButton} onPress={() => setShowContactForm(false)}>
-                    <Text style={styles.cancelText}>Cancelar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.saveContactButton} onPress={addContact}>
-                    <Text style={styles.saveContactText}>Guardar</Text>
-                  </TouchableOpacity>
-                </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Etiqueta (opcional)"
+                      value={contactInput.label}
+                      onChangeText={(value) => setContactInput(prev => ({ ...prev, label: value }))}
+                    />
+
+                    <View style={styles.contactFormButtons}>
+                      <TouchableOpacity style={styles.cancelButton} onPress={() => setShowContactForm(false)}>
+                        <Text style={styles.cancelText}>Cancelar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.saveContactButton} onPress={addContact}>
+                        <Text style={styles.saveContactText}>Guardar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </>
+            ) : (
+              <View style={styles.infoMessageContainer}>
+                <Text style={styles.infoMessageText}>
+                  Una vez hayas registrado tu servicio, podrás añadir tus líneas de contacto y galería ;)
+                </Text>
               </View>
             )}
+
+            {form.cover_image_url && <Image source={{ uri: form.cover_image_url }} style={styles.coverPhoto} />}
 
           </ScrollView>
 
@@ -754,4 +764,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveContactText: { color: '#fff', fontWeight: 'bold' },
+  infoMessageContainer: {
+    backgroundColor: '#F1F5F9',
+    padding: 16,
+    borderRadius: 10,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  infoMessageText: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
 });
