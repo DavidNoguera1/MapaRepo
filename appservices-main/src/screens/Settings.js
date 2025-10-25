@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../contexts/UserContext';
 import { getProfile, updateProfile, updatePassword, deleteAccount } from '../api/user';
 import { uploadProfileImage } from '../api/profile';
+import { SERVER_BASE_URL } from '../api/config';
 
 export default function Settings() {
   const navigation = useNavigation();
@@ -166,7 +167,7 @@ export default function Settings() {
             {user?.profile_picture_url ? (
               <Image
                 key={imageKey}
-                source={{ uri: `http://192.168.100.216:3001${user.profile_picture_url}` }}
+                source={{ uri: `${SERVER_BASE_URL}${user.profile_picture_url}` }}
                 style={styles.profileImage}
               />
             ) : (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,13 +9,20 @@ import {
   Platform,
   StyleSheet,
   Alert,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from '@react-navigation/native';
-import { useUser } from '../../contexts/UserContext';
-import { getChatMessages, sendMessage, markMessageAsRead, deleteMessage } from '../../api/chats';
-import Toast from 'react-native-toast-message';
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
+import { useFocusEffect } from "@react-navigation/native";
+import { useUser } from "../../contexts/UserContext";
+import {
+  getChatMessages,
+  sendMessage,
+  deleteMessage,
+} from "../../api/chats";
+import Toast from "react-native-toast-message";
 
 const ChatScreen = ({ route, navigation }) => {
   const { token, user } = useUser();
@@ -27,9 +34,7 @@ const ChatScreen = ({ route, navigation }) => {
 
   useFocusEffect(
     React.useCallback(() => {
-      if (token && chatId) {
-        loadMessages();
-      }
+      if (token && chatId) loadMessages();
     }, [token, chatId])
   );
 
@@ -37,55 +42,54 @@ const ChatScreen = ({ route, navigation }) => {
     try {
       setLoading(true);
       const response = await getChatMessages(token, chatId);
-      const formattedMessages = response.messages.map(msg => ({
+      const formattedMessages = response.messages.map((msg) => ({
         id: msg.id.toString(),
         text: msg.content,
-        sender: msg.sender_id === user.id ? 'me' : 'other',
-        timestamp: msg.created_at
+        sender: msg.sender_id === user.id ? "me" : "other",
+        timestamp: msg.created_at,
+        file: msg.file || null, // si backend retorna archivo
       }));
       setMessages(formattedMessages);
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error("Error loading messages:", error);
       Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'No se pudieron cargar los mensajes',
+        type: "error",
+        text1: "Error",
+        text2: "No se pudieron cargar los mensajes",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Enviar mensaje
+  // Enviar mensaje de texto
   const handleSend = async () => {
     if (inputText.trim() === "" || !token || !chatId || sending) return;
 
     try {
       setSending(true);
       const response = await sendMessage(token, chatId, inputText.trim());
-
-      // Agregar el mensaje enviado a la lista local
       const newMessage = {
         id: response.message.id.toString(),
         text: response.message.content,
-        sender: 'me',
-        timestamp: response.message.created_at
+        sender: "me",
+        timestamp: response.message.created_at,
       };
-      setMessages(prev => [...prev, newMessage]);
+      setMessages((prev) => [newMessage, ...prev]);
       setInputText("");
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
       Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'No se pudo enviar el mensaje',
+        type: "error",
+        text1: "Error",
+        text2: "No se pudo enviar el mensaje",
       });
     } finally {
       setSending(false);
     }
   };
 
-  // ✅ Eliminar mensaje
+  // Eliminar mensaje
   const handleDeleteMessage = (id) => {
     Alert.alert("Eliminar mensaje", "¿Seguro que quieres eliminar este mensaje?", [
       { text: "Cancelar", style: "cancel" },
@@ -97,40 +101,118 @@ const ChatScreen = ({ route, navigation }) => {
             await deleteMessage(token, id);
             setMessages((prev) => prev.filter((m) => m.id !== id));
             Toast.show({
-              type: 'success',
-              text1: 'Mensaje eliminado',
-              text2: 'El mensaje fue eliminado correctamente',
+              type: "success",
+              text1: "Mensaje eliminado",
             });
           } catch (error) {
-            console.error('Error deleting message:', error);
+            console.error("Error deleting message:", error);
             Toast.show({
-              type: 'error',
-              text1: 'Error',
-              text2: 'No se pudo eliminar el mensaje',
+              type: "error",
+              text1: "Error",
+              text2: "No se pudo eliminar el mensaje",
             });
           }
-        }
+        },
       },
     ]);
   };
 
-  // ✅ Mostrar mensaje (base visual ya lista)
-  const renderMessage = ({ item }) => (
-    <TouchableOpacity
-      onLongPress={() => handleDeleteMessage(item.id)} // ← Acción eliminar
-      activeOpacity={0.8}
-      style={[
-        styles.messageBubble,
-        item.sender === "me" ? styles.myMessage : styles.otherMessage,
-      ]}
-    >
-      <Text style={[styles.messageText, item.sender === "me" && { color: "#fff" }]}>{item.text}</Text>
-    </TouchableOpacity>
-  );
+  // Subir imagen desde galería
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      const newMessage = {
+        id: Date.now().toString(),
+        sender: "me",
+        image: uri,
+        text: null,
+      };
+      setMessages((prev) => [newMessage, ...prev]);
+    }
+  };
+
+  // Subir archivo (PDF, DOC, etc.)
+  const handlePickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "*/*",
+      copyToCacheDirectory: true,
+    });
+    if (result.type === "success") {
+      const newMessage = {
+        id: Date.now().toString(),
+        sender: "me",
+        file: result,
+        text: null,
+      };
+      setMessages((prev) => [newMessage, ...prev]);
+    }
+  };
+
+  // Render de mensaje
+  const renderMessage = ({ item }) => {
+    const isMine = item.sender === "me";
+    const timestamp = new Date(item.timestamp).toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    return (
+      <TouchableOpacity
+        onLongPress={() => handleDeleteMessage(item.id)}
+        activeOpacity={0.8}
+        style={[
+          styles.messageBubble,
+          isMine ? styles.myMessage : styles.otherMessage,
+        ]}
+      >
+        {item.image ? (
+          <Image
+            source={{ uri: item.image }}
+            style={styles.imagePreview}
+            resizeMode="cover"
+          />
+        ) : item.file ? (
+          <View style={styles.fileContainer}>
+            <MaterialIcons name="insert-drive-file" size={28} color="#fff" />
+            <Text
+              style={[
+                styles.fileName,
+                { color: isMine ? "#fff" : "#111" },
+              ]}
+              numberOfLines={1}
+            >
+              {item.file.name || "Archivo adjunto"}
+            </Text>
+          </View>
+        ) : (
+          <Text
+            style={[
+              styles.messageText,
+              isMine && { color: "#fff" },
+            ]}
+          >
+            {item.text}
+          </Text>
+        )}
+        <Text
+          style={[
+            styles.timestamp,
+            isMine ? styles.myTimestamp : styles.otherTimestamp,
+          ]}
+        >
+          {timestamp}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 🧭 Encabezado del chat */}
+      {/* 🧭 Encabezado */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#10B981" />
@@ -138,24 +220,28 @@ const ChatScreen = ({ route, navigation }) => {
         <Text style={styles.chatName}>{route.params?.chatName || "Chat"}</Text>
       </View>
 
-      {/* 💬 Contenedor principal del chat */}
+      {/* 💬 Chat principal */}
       <KeyboardAvoidingView
         style={styles.chatArea}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        {/* 📜 Mostrar mensajes */}
         <FlatList
-          data={messages}
+          data={[...messages].reverse()}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messageList}
           showsVerticalScrollIndicator={false}
-          inverted
         />
 
-        {/* ✏️ Caja para escribir y enviar mensajes */}
+        {/* ✏️ Input + botones */}
         <View style={styles.inputContainer}>
+          <TouchableOpacity onPress={handlePickImage} style={styles.plusButton}>
+            <Ionicons name="image" size={22} color="#10B981" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePickFile} style={styles.plusButton}>
+            <Ionicons name="attach" size={22} color="#10B981" />
+          </TouchableOpacity>
+
           <TextInput
             style={styles.input}
             placeholder="Escribe un mensaje..."
@@ -206,18 +292,16 @@ const styles = StyleSheet.create({
   },
   messageList: {
     padding: 14,
-    paddingBottom: 80,
   },
   messageBubble: {
     borderRadius: 16,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    marginVertical: 4,
+    marginVertical: 6,
     maxWidth: "75%",
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
   myMessage: {
@@ -235,6 +319,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
   },
+  imagePreview: {
+    width: 180,
+    height: 180,
+    borderRadius: 10,
+  },
+  fileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  fileName: {
+    fontSize: 14,
+    flexShrink: 1,
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -242,6 +340,10 @@ const styles = StyleSheet.create({
     padding: 8,
     borderTopWidth: 1,
     borderColor: "#E5E7EB",
+  },
+  plusButton: {
+    padding: 6,
+    marginRight: 4,
   },
   input: {
     flex: 1,
@@ -263,5 +365,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 2,
+  },
+  timestamp: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  myTimestamp: {
+    color: "#E0F2F1",
+    textAlign: "right",
+  },
+  otherTimestamp: {
+    color: "#9CA3AF",
+    textAlign: "left",
   },
 });

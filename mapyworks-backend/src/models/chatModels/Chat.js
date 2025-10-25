@@ -36,9 +36,12 @@ class Chat {
     const query = `
       SELECT c.*, u.user_name as creator_name,
              other_u.user_name as other_participant_name,
+             other_u.profile_picture_url as other_participant_profile_picture,
              m.content as last_message_content,
              m.created_at as last_message_time,
-             m.sender_id as last_message_sender
+             m.sender_id as last_message_sender,
+             s.title as service_name,
+             s.cover_image_url as service_image
       FROM chats c
       JOIN chat_participants cp ON c.id = cp.chat_id
       LEFT JOIN users u ON c.created_by = u.id
@@ -47,6 +50,7 @@ class Chat {
         WHERE cp2.chat_id = c.id AND cp2.user_id != $1
         LIMIT 1
       )
+      LEFT JOIN services s ON c.service_id = s.id
       LEFT JOIN (
         SELECT DISTINCT ON (chat_id) chat_id, content, created_at, sender_id
         FROM messages
@@ -94,8 +98,17 @@ class Chat {
 
   // Eliminar chat
   static async delete(id) {
-    const query = 'DELETE FROM chats WHERE id = $1 RETURNING id';
-    const result = await pool.query(query, [id]);
+    // Primero eliminar mensajes relacionados
+    const deleteMessagesQuery = 'DELETE FROM messages WHERE chat_id = $1';
+    await pool.query(deleteMessagesQuery, [id]);
+
+    // Luego eliminar participantes
+    const deleteParticipantsQuery = 'DELETE FROM chat_participants WHERE chat_id = $1';
+    await pool.query(deleteParticipantsQuery, [id]);
+
+    // Finalmente eliminar el chat
+    const deleteChatQuery = 'DELETE FROM chats WHERE id = $1 RETURNING id';
+    const result = await pool.query(deleteChatQuery, [id]);
     return result.rows.length > 0;
   }
 

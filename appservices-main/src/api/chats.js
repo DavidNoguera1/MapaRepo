@@ -137,3 +137,22 @@ export async function deleteMessage(token, messageId) {
     throw error;
   }
 }
+
+// Eliminar chat
+export async function deleteChat(token, chatId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al eliminar chat');
+    }
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}

@@ -135,10 +135,10 @@ const startChatWithUser = async (req, res) => {
   }
 };
 
-// Eliminar chat (solo admin)
+// Eliminar chat (participante o admin)
 const deleteChat = async (req, res) => {
   try {
-    const chatId = req.params.id;
+    const chatId = req.params.chatId;
     const deleted = await Chat.delete(chatId);
 
     if (!deleted) {

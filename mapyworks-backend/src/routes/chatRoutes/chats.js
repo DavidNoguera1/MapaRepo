@@ -19,7 +19,7 @@ router.post('/start-with/:userId', chatsController.startChatWithUser);
 // Obtener detalles de un chat (participante o admin)
 router.get('/:chatId', chatsController.checkChatParticipation, chatsController.getChatDetails);
 
-// Eliminar chat (solo admin)
-router.delete('/:id', isAdmin, chatsController.deleteChat);
+// Eliminar chat (participante o admin)
+router.delete('/:chatId', chatsController.checkChatParticipation, chatsController.deleteChat);
 
 module.exports = router;

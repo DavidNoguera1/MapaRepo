@@ -5,20 +5,23 @@ import { SafeAreaView, StyleSheet } from 'react-native';
 import { UserProvider } from './src/contexts/UserContext';
 import Toast from 'react-native-toast-message';
 import { RootSiblingParent } from 'react-native-root-siblings';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
   return (
-    <RootSiblingParent>
-      <SafeAreaProvider>
-        <UserProvider>
-          <SafeAreaView style={styles.safeArea}>
-            <AppNavigator />
-            {/* Toast global */}
-            <Toast />
-          </SafeAreaView>
-        </UserProvider>
-      </SafeAreaProvider>
-    </RootSiblingParent>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <RootSiblingParent>
+        <SafeAreaProvider>
+          <UserProvider>
+            <SafeAreaView style={styles.safeArea}>
+              <AppNavigator />
+              {/* Toast global */}
+              <Toast />
+            </SafeAreaView>
+          </UserProvider>
+        </SafeAreaProvider>
+      </RootSiblingParent>
+    </GestureHandlerRootView>
   );
 }
 

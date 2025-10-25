@@ -247,13 +247,10 @@ export default function Home() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Servicios Añadidos Recientemente</Text>
-        <FlatList
-          data={recentServices}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
-          renderItem={({ item }) => (
+        <View style={styles.gridContainer}>
+          {recentServices.map((item) => (
             <TouchableOpacity
+              key={item.id.toString()}
               style={styles.gridCard}
               onPress={() => {
                 setSelectedService(item);
@@ -280,8 +277,8 @@ export default function Home() {
                 ))}
               </View>
             </TouchableOpacity>
-          )}
-        />
+          ))}
+        </View>
       </View>
 
       <ServiceDetailsModal
@@ -371,6 +368,11 @@ const styles = StyleSheet.create({
   },
   smallTagText: { fontSize: 10, color: '#1bc47d', fontWeight: '500' },
 
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   gridCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
