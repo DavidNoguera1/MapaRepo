@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +27,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now());
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -154,9 +155,39 @@ export default function Settings() {
     navigation.replace('Login');
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const updatedUser = await getProfile(token);
+      updateUser(updatedUser);
+      setFormData({
+        user_name: updatedUser.user_name || '',
+        email: updatedUser.email || '',
+        phone: updatedUser.phone || '',
+        cedula: updatedUser.cedula || '',
+      });
+      setImageKey(Date.now());
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
   <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#43C6AC']}
+            tintColor={'#43C6AC'}
+          />
+        }
+      >
         <Text style={styles.header}>Configuración</Text>
         <Text style={styles.subheader}>Perfil y preferencias</Text>
 

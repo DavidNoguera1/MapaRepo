@@ -62,10 +62,14 @@ export default function Map() {
     try {
       const cachedLat = await AsyncStorage.getItem('cachedLat');
       const cachedLng = await AsyncStorage.getItem('cachedLng');
+      const cachedRadius = await AsyncStorage.getItem('cachedRadius');
       if (cachedLat && cachedLng) {
         const coords = { latitude: parseFloat(cachedLat), longitude: parseFloat(cachedLng) };
         setZoneCenter(coords);
         setMapRegion({ ...mapRegion, latitude: coords.latitude, longitude: coords.longitude });
+      }
+      if (cachedRadius) {
+        setZoneRadius(parseFloat(cachedRadius));
       }
     } catch {}
   };
@@ -209,7 +213,10 @@ export default function Map() {
                 step={1000}
                 value={zoneRadius}
                 onValueChange={setZoneRadius}
-                onSlidingComplete={loadServicesNearZone}
+                onSlidingComplete={async (value) => {
+                  await AsyncStorage.setItem('cachedRadius', value.toString());
+                  loadServicesNearZone();
+                }}
                 minimumTrackTintColor="#1bc47d"
                 maximumTrackTintColor="#d3d3d3"
                 thumbTintColor="#1bc47d"

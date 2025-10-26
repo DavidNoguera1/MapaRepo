@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +31,7 @@ export default function MyServices() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Cargar servicios al montar el componente
   useEffect(() => {
@@ -51,6 +53,12 @@ export default function MyServices() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchServices();
+    setRefreshing(false);
   };
 
   // Agrega un nuevo servicio
@@ -315,6 +323,14 @@ const renderItem = ({ item }) => (
         numColumns={2}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#10B981']}
+            tintColor={'#10B981'}
+          />
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="business-outline" size={64} color="#CBD5E1" />
