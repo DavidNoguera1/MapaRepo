@@ -79,7 +79,7 @@ export async function getChatMessages(token, chatId, limit = 50, offset = 0) {
   }
 }
 
-// Enviar mensaje a un chat
+// Enviar mensaje de texto a un chat
 export async function sendMessage(token, chatId, content) {
   try {
     const response = await fetch(`${API_BASE_URL}/messages/${chatId}/messages`, {
@@ -98,6 +98,81 @@ export async function sendMessage(token, chatId, content) {
   } catch (error) {
     throw error;
   }
+}
+
+// Enviar mensaje con archivo a un chat
+export async function sendFileMessage(token, chatId, fileUri, contentType, content = null) {
+  try {
+    const formData = new FormData();
+
+    // Agregar el archivo
+    const fileName = fileUri.split('/').pop();
+    const fileType = getMimeType(fileName, contentType);
+
+    formData.append('file', {
+      uri: fileUri,
+      name: fileName,
+      type: fileType,
+    });
+
+    // Agregar otros campos
+    formData.append('content_type', contentType);
+    if (content && content.trim()) {
+      formData.append('content', content.trim());
+    }
+
+    const response = await fetch(`${API_BASE_URL}/messages/${chatId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // No incluir Content-Type, fetch lo establece automáticamente para FormData
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al enviar archivo');
+    }
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Función auxiliar para determinar el tipo MIME basado en la extensión y content_type
+function getMimeType(fileName, contentType) {
+  const ext = fileName.split('.').pop().toLowerCase();
+
+  const mimeTypes = {
+    image: {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+    },
+    video: {
+      mp4: 'video/mp4',
+      avi: 'video/avi',
+      mov: 'video/quicktime',
+      wmv: 'video/x-ms-wmv',
+    },
+    audio: {
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      m4a: 'audio/mp4',
+      ogg: 'audio/ogg',
+    },
+    document: {
+      pdf: 'application/pdf',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      txt: 'text/plain',
+    },
+  };
+
+  return mimeTypes[contentType]?.[ext] || 'application/octet-stream';
 }
 
 // Marcar mensaje como leído

@@ -10,18 +10,24 @@ import {
   StyleSheet,
   Alert,
   Image,
+  Modal,
+  Dimensions,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { useFocusEffect } from "@react-navigation/native";
 import { useUser } from "../../contexts/UserContext";
 import {
   getChatMessages,
   sendMessage,
+  sendFileMessage,
   deleteMessage,
 } from "../../api/chats";
+import { SERVER_BASE_URL } from "../../api/config";
 import Toast from "react-native-toast-message";
 
 const ChatScreen = ({ route, navigation }) => {
@@ -31,6 +37,8 @@ const ChatScreen = ({ route, navigation }) => {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -47,7 +55,10 @@ const ChatScreen = ({ route, navigation }) => {
         text: msg.content,
         sender: msg.sender_id === user.id ? "me" : "other",
         timestamp: msg.created_at,
-        file: msg.file || null, // si backend retorna archivo
+        content_type: msg.content_type,
+        file_url: msg.file_url,
+        file_name: msg.file_name,
+        file_size: msg.file_size,
       }));
       setMessages(formattedMessages);
     } catch (error) {
@@ -119,36 +130,119 @@ const ChatScreen = ({ route, navigation }) => {
 
   // Subir imagen desde galería
   const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      const newMessage = {
-        id: Date.now().toString(),
-        sender: "me",
-        image: uri,
-        text: null,
-      };
-      setMessages((prev) => [newMessage, ...prev]);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+      });
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        setSending(true);
+
+        const response = await sendFileMessage(token, chatId, uri, 'image');
+        const newMessage = {
+          id: response.message.id.toString(),
+          text: response.message.content,
+          sender: "me",
+          timestamp: response.message.created_at,
+          content_type: response.message.content_type,
+          file_url: response.message.file_url,
+          file_name: response.message.file_name,
+          file_size: response.message.file_size,
+        };
+        setMessages((prev) => [newMessage, ...prev]);
+      }
+    } catch (error) {
+      console.error("Error sending image:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No se pudo enviar la imagen",
+      });
+    } finally {
+      setSending(false);
     }
   };
 
   // Subir archivo (PDF, DOC, etc.)
   const handlePickFile = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "*/*",
-      copyToCacheDirectory: true,
-    });
-    if (result.type === "success") {
-      const newMessage = {
-        id: Date.now().toString(),
-        sender: "me",
-        file: result,
-        text: null,
-      };
-      setMessages((prev) => [newMessage, ...prev]);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "*/*",
+        copyToCacheDirectory: true,
+      });
+      if (result.type === "success") {
+        const uri = result.uri;
+        setSending(true);
+
+        // Determinar content_type basado en la extensión del archivo
+        const fileName = result.name || uri.split('/').pop();
+        const ext = fileName.split('.').pop().toLowerCase();
+        let contentType = 'document';
+
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+          contentType = 'image';
+        } else if (['mp4', 'avi', 'mov', 'wmv'].includes(ext)) {
+          contentType = 'video';
+        } else if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext)) {
+          contentType = 'audio';
+        }
+
+        const response = await sendFileMessage(token, chatId, uri, contentType);
+        const newMessage = {
+          id: response.message.id.toString(),
+          text: response.message.content,
+          sender: "me",
+          timestamp: response.message.created_at,
+          content_type: response.message.content_type,
+          file_url: response.message.file_url,
+          file_name: response.message.file_name,
+          file_size: response.message.file_size,
+        };
+        setMessages((prev) => [newMessage, ...prev]);
+      }
+    } catch (error) {
+      console.error("Error sending file:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No se pudo enviar el archivo",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Abrir imagen en modal
+  const openImageModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalVisible(true);
+  };
+
+  // Descargar archivo
+  const downloadFile = async (fileUrl, fileName) => {
+    try {
+      const fileUri = `${SERVER_BASE_URL}${fileUrl}`;
+      const downloadUri = FileSystem.documentDirectory + fileName;
+
+      const downloadResult = await FileSystem.downloadAsync(fileUri, downloadUri);
+
+      if (downloadResult.status === 200) {
+        Toast.show({
+          type: "success",
+          text1: "Archivo descargado",
+          text2: `Guardado en: ${downloadUri}`,
+        });
+      } else {
+        throw new Error("Download failed");
+      }
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No se pudo descargar el archivo",
+      });
     }
   };
 
@@ -169,25 +263,43 @@ const ChatScreen = ({ route, navigation }) => {
           isMine ? styles.myMessage : styles.otherMessage,
         ]}
       >
-        {item.image ? (
-          <Image
-            source={{ uri: item.image }}
-            style={styles.imagePreview}
-            resizeMode="cover"
-          />
-        ) : item.file ? (
-          <View style={styles.fileContainer}>
-            <MaterialIcons name="insert-drive-file" size={28} color="#fff" />
-            <Text
-              style={[
-                styles.fileName,
-                { color: isMine ? "#fff" : "#111" },
-              ]}
-              numberOfLines={1}
-            >
-              {item.file.name || "Archivo adjunto"}
-            </Text>
-          </View>
+        {item.content_type === 'image' && item.file_url ? (
+          <TouchableOpacity onPress={() => openImageModal(`${SERVER_BASE_URL}${item.file_url}`)}>
+            <Image
+              source={{ uri: `${SERVER_BASE_URL}${item.file_url}` }}
+              style={styles.imagePreview}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        ) : item.file_url ? (
+          <TouchableOpacity
+            onPress={() => downloadFile(item.file_url, item.file_name)}
+            style={styles.fileContainer}
+          >
+            <MaterialIcons name="insert-drive-file" size={28} color={isMine ? "#fff" : "#111"} />
+            <View style={styles.fileInfo}>
+              <Text
+                style={[
+                  styles.fileName,
+                  { color: isMine ? "#fff" : "#111" },
+                ]}
+                numberOfLines={1}
+              >
+                {item.file_name || "Archivo adjunto"}
+              </Text>
+              {item.file_size && (
+                <Text
+                  style={[
+                    styles.fileSize,
+                    { color: isMine ? "#E0F2F1" : "#64748B" },
+                  ]}
+                >
+                  {(item.file_size / 1024).toFixed(1)} KB
+                </Text>
+              )}
+            </View>
+            <MaterialIcons name="download" size={20} color={isMine ? "#fff" : "#111"} />
+          </TouchableOpacity>
         ) : (
           <Text
             style={[
@@ -255,6 +367,30 @@ const ChatScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Modal para imagen ampliada */}
+      <Modal
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.modalCloseButton}
+            onPress={() => setImageModalVisible(false)}
+          >
+            <Ionicons name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image
+              source={{ uri: selectedImage }}
+              style={styles.fullScreenImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -329,9 +465,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
+  fileInfo: {
+    flex: 1,
+    flexDirection: "column",
+  },
   fileName: {
     fontSize: 14,
     flexShrink: 1,
+  },
+  fileSize: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCloseButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+    padding: 10,
+  },
+  fullScreenImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
   },
   inputContainer: {
     flexDirection: "row",

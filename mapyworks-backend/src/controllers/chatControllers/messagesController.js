@@ -1,5 +1,47 @@
 const Message = require('../../models/chatModels/Message');
 const Chat = require('../../models/chatModels/Chat');
+const path = require('path');
+const fs = require('fs').promises;
+
+// Ensure upload directory exists
+const ensureUploadDir = async () => {
+  const uploadDir = path.join(process.cwd(), 'uploads/chat_files');
+  try {
+    await fs.access(uploadDir);
+  } catch {
+    await fs.mkdir(uploadDir, { recursive: true });
+  }
+  return uploadDir;
+};
+
+// Generate unique filename
+const generateFileName = (chatId, originalName) => {
+  const timestamp = Date.now();
+  const ext = path.extname(originalName);
+  return `${chatId}_${timestamp}${ext}`;
+};
+
+// Validate file type based on content_type
+const validateFile = (file, contentType) => {
+  const maxSize = 10 * 1024 * 1024; // 10MB for chat files
+
+  if (file.size > maxSize) {
+    throw new Error('El archivo es demasiado grande. El tamaño máximo es 10MB.');
+  }
+
+  const typeValidations = {
+    image: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+    video: ['video/mp4', 'video/avi', 'video/mov', 'video/wmv'],
+    audio: ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg'],
+    document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+  };
+
+  if (typeValidations[contentType] && !typeValidations[contentType].includes(file.mimetype)) {
+    throw new Error(`Tipo de archivo no permitido para ${contentType}.`);
+  }
+
+  return true;
+};
 
 // Middleware para verificar participación en chat
 const checkChatParticipation = async (req, res, next) => {
@@ -18,26 +60,64 @@ const checkChatParticipation = async (req, res, next) => {
   }
 };
 
-// Enviar mensaje (solo texto)
+// Enviar mensaje (soporta texto y archivos)
 const sendMessage = async (req, res) => {
   try {
     const { chatId } = req.params;
-    const { content } = req.body;
+    const { content, content_type = 'text' } = req.body;
 
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
-      return res.status(400).json({ error: 'Se requiere contenido de texto válido' });
+    // Validar content_type
+    const allowedTypes = ['text', 'image', 'video', 'audio', 'document'];
+    if (!allowedTypes.includes(content_type)) {
+      return res.status(400).json({ error: `Tipo de contenido no válido. Tipos permitidos: ${allowedTypes.join(', ')}` });
     }
 
-    if (content.length > 1000) {
-      return res.status(400).json({ error: 'El mensaje no puede exceder 1000 caracteres' });
-    }
-
-    const message = await Message.create({
+    let messageData = {
       chat_id: chatId,
       sender_id: req.userId,
-      content: content.trim(),
-      content_type: 'text'
-    });
+      content_type
+    };
+
+    if (content_type === 'text') {
+      // Validar mensaje de texto
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ error: 'Se requiere contenido de texto válido' });
+      }
+      if (content.length > 1000) {
+        return res.status(400).json({ error: 'El mensaje no puede exceder 1000 caracteres' });
+      }
+      messageData.content = content.trim();
+    } else {
+      // Manejar archivo multimedia
+      if (!req.file) {
+        return res.status(400).json({ error: 'Se requiere un archivo para este tipo de mensaje' });
+      }
+
+      // Validar archivo
+      validateFile(req.file, content_type);
+
+      const uploadDir = await ensureUploadDir();
+      const filename = generateFileName(chatId, req.file.originalname);
+      const filepath = path.join(uploadDir, filename);
+
+      // Guardar archivo
+      await fs.writeFile(filepath, req.file.buffer);
+
+      // Preparar datos del mensaje
+      const fileUrl = `/uploads/chat_files/${filename}`;
+      messageData.file_url = fileUrl;
+      messageData.file_name = req.file.originalname;
+      messageData.file_size = req.file.size;
+      messageData.content = content && content.trim() ? content.trim() : null;
+
+      // Metadata adicional para ciertos tipos
+      if (content_type === 'image' || content_type === 'video') {
+        // Aquí se podría agregar lógica para generar thumbnails
+        // Por ahora, solo guardamos la info básica
+      }
+    }
+
+    const message = await Message.create(messageData);
 
     // Actualizar last_message_at del chat
     await Chat.updateLastMessage(chatId);
@@ -45,6 +125,23 @@ const sendMessage = async (req, res) => {
     res.status(201).json({ message: 'Mensaje enviado exitosamente', message });
   } catch (error) {
     console.error('Error enviando mensaje:', error);
+
+    // Limpiar archivo si fue subido pero falló la creación del mensaje
+    if (req.file && req.file.buffer) {
+      try {
+        const uploadDir = await ensureUploadDir();
+        const filename = generateFileName(req.params.chatId, req.file.originalname);
+        const filepath = path.join(uploadDir, filename);
+        await fs.unlink(filepath);
+      } catch (cleanupError) {
+        console.error('Error limpiando archivo:', cleanupError);
+      }
+    }
+
+    if (error.message.includes('Tipo de archivo') || error.message.includes('tamaño')) {
+      return res.status(400).json({ error: error.message });
+    }
+
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
@@ -85,10 +182,26 @@ const markMessageAsRead = async (req, res) => {
 const deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
+
+    // Obtener el mensaje antes de eliminarlo para limpiar archivos
+    const message = await Message.findById(messageId);
+
     const deleted = await Message.delete(messageId);
 
     if (!deleted) {
       return res.status(404).json({ error: 'Mensaje no encontrado' });
+    }
+
+    // Si el mensaje tenía un archivo, eliminarlo del sistema de archivos
+    if (message && message.file_url) {
+      try {
+        const uploadDir = await ensureUploadDir();
+        const filename = path.basename(message.file_url);
+        const filepath = path.join(uploadDir, filename);
+        await fs.unlink(filepath);
+      } catch (error) {
+        console.log('Archivo del mensaje no encontrado o ya eliminado');
+      }
     }
 
     res.json({ message: 'Mensaje eliminado exitosamente' });
