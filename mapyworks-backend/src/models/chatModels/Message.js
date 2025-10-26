@@ -1,4 +1,6 @@
 const pool = require('../../config/database');
+const path = require('path');
+const fs = require('fs').promises;
 
 class Message {
   // Crear un nuevo mensaje (soporta texto y archivos multimedia)
@@ -94,6 +96,38 @@ class Message {
 
   // Eliminar mensaje
   static async delete(id) {
+    // Primero obtener el mensaje para acceder a file_url y thumbnail_url
+    const message = await this.findById(id);
+    if (!message) {
+      return null; // Mensaje no encontrado
+    }
+
+    // Eliminar archivos asociados si existen
+    const uploadDir = path.join(process.cwd(), 'uploads/chat_files');
+
+    if (message.file_url) {
+      try {
+        const filename = path.basename(message.file_url);
+        const filepath = path.join(uploadDir, filename);
+        await fs.unlink(filepath);
+        console.log(`Archivo eliminado: ${filepath}`);
+      } catch (error) {
+        console.warn(`No se pudo eliminar el archivo ${message.file_url}:`, error.message);
+      }
+    }
+
+    if (message.thumbnail_url) {
+      try {
+        const thumbnailFilename = path.basename(message.thumbnail_url);
+        const thumbnailPath = path.join(uploadDir, thumbnailFilename);
+        await fs.unlink(thumbnailPath);
+        console.log(`Thumbnail eliminado: ${thumbnailPath}`);
+      } catch (error) {
+        console.warn(`No se pudo eliminar el thumbnail ${message.thumbnail_url}:`, error.message);
+      }
+    }
+
+    // Eliminar el registro de la base de datos
     const query = `
       DELETE FROM messages WHERE id = $1 RETURNING id
     `;

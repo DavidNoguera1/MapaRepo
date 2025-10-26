@@ -183,25 +183,10 @@ const deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
 
-    // Obtener el mensaje antes de eliminarlo para limpiar archivos
-    const message = await Message.findById(messageId);
-
     const deleted = await Message.delete(messageId);
 
     if (!deleted) {
       return res.status(404).json({ error: 'Mensaje no encontrado' });
-    }
-
-    // Si el mensaje tenía un archivo, eliminarlo del sistema de archivos
-    if (message && message.file_url) {
-      try {
-        const uploadDir = await ensureUploadDir();
-        const filename = path.basename(message.file_url);
-        const filepath = path.join(uploadDir, filename);
-        await fs.unlink(filepath);
-      } catch (error) {
-        console.log('Archivo del mensaje no encontrado o ya eliminado');
-      }
     }
 
     res.json({ message: 'Mensaje eliminado exitosamente' });
