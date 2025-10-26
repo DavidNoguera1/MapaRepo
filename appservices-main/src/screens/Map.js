@@ -166,7 +166,7 @@ export default function Map() {
             showsUserLocation={true}
             showsMyLocationButton={true}
           >
-            {filteredServices.map((service) => (
+            {filteredServices.filter(service => service.is_active).map((service) => (
               <Marker
                 key={service.id}
                 coordinate={{
@@ -409,5 +409,20 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   smallTagText: { fontSize: 10, color: '#1bc47d', fontWeight: '500' },
+  customMarker: {
+    backgroundColor: '#1bc47d',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 120,
+  },
+  customMarkerText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
 

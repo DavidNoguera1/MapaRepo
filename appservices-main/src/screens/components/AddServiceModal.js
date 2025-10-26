@@ -453,7 +453,7 @@ export default function AddServiceModal({ visible, onClose, onSave, isEditing = 
             </ScrollView>
 
             <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Servicio activo</Text>
+              <Text style={styles.switchLabel}>Ubicación Exacta</Text>
               <Switch
                 value={form.is_active}
                 onValueChange={(v) => handleChange('is_active', v)}

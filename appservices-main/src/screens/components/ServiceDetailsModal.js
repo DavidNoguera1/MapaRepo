@@ -174,14 +174,16 @@ export default function ServiceDetailsModal({ visible, service, onClose, onEdit,
                   zoomEnabled={true}
                   rotateEnabled={true}
                 >
-                  <Marker
-                    coordinate={{
-                      latitude: service.lat,
-                      longitude: service.lng,
-                    }}
-                    title={service.title}
-                    description={service.address_text}
-                  />
+                  {service.is_active && (
+                    <Marker
+                      coordinate={{
+                        latitude: service.lat,
+                        longitude: service.lng,
+                      }}
+                      title={service.title}
+                      description={service.address_text}
+                    />
+                  )}
                 </MapView>
               </View>
             ) : (
@@ -222,8 +224,8 @@ export default function ServiceDetailsModal({ visible, service, onClose, onEdit,
               </View>
             )}
 
-            <Text style={styles.label}>Activo:</Text>
-            <Text style={styles.text}>{service.is_active ? 'Sí' : 'No'}</Text>
+            <Text style={styles.label}>Ubicación Exacta:</Text>
+            <Text style={styles.text}>{service.is_active ? 'Sí' : 'El usuario decidió no mostrar su ubicación exacta'}</Text>
 
             <Text style={styles.label}>Propietario:</Text>
             <Text style={styles.text}>{service.owner_name || 'No disponible'}</Text>

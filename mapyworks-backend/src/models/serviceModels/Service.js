@@ -356,8 +356,7 @@ class Service {
       LEFT JOIN users u ON s.owner_id = u.id
       LEFT JOIN service_tags st ON s.id = st.service_id
       LEFT JOIN tags t ON st.tag_id = t.id
-      WHERE s.is_active = true
-        AND ST_DWithin(s.location_geog, ST_GeomFromText('POINT(${lng} ${lat})', 4326), ${radiusKm * 1000})
+      WHERE ST_DWithin(s.location_geog, ST_GeomFromText('POINT(${lng} ${lat})', 4326), ${radiusKm * 1000})
       GROUP BY s.id, s.owner_id, s.title, s.description, s.cover_image_url,
                s.location_geog, s.address_text, s.is_active, s.created_at,
                s.updated_at, s.avg_rating, s.reviews_count, u.user_name

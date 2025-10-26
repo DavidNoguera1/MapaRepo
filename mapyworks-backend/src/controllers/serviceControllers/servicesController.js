@@ -1,4 +1,7 @@
 const Service = require('../../models/serviceModels/Service');
+const ServicePhoto = require('../../models/serviceModels/ServicePhoto');
+const path = require('path');
+const fs = require('fs').promises;
 
 // Middleware para verificar ownership o admin
 const checkOwnershipOrAdmin = async (req, res, next) => {
@@ -193,6 +196,43 @@ const updateService = async (req, res) => {
 const deleteService = async (req, res) => {
   try {
     const serviceId = req.params.id;
+
+    // Get service info before deleting to access cover image
+    const service = await Service.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ error: 'Servicio no encontrado' });
+    }
+
+    // Get all photos for this service
+    const photos = await ServicePhoto.findByServiceId(serviceId);
+
+    // Delete cover image file if exists
+    if (service.cover_image_url) {
+      try {
+        const coverDir = path.join(process.cwd(), 'uploads/service_covers');
+        const coverFilename = path.basename(service.cover_image_url);
+        const coverFilepath = path.join(coverDir, coverFilename);
+        await fs.unlink(coverFilepath);
+      } catch (error) {
+        console.log('Service cover image file not found or already deleted');
+      }
+    }
+
+    // Delete all service photo files
+    const photosDir = path.join(process.cwd(), 'uploads/service_photos');
+    for (const photo of photos) {
+      if (photo.photo_url) {
+        try {
+          const photoFilename = path.basename(photo.photo_url);
+          const photoFilepath = path.join(photosDir, photoFilename);
+          await fs.unlink(photoFilepath);
+        } catch (error) {
+          console.log(`Service photo file ${photo.photo_url} not found or already deleted`);
+        }
+      }
+    }
+
+    // Delete service from database (this will cascade delete photos and other related data)
     const deleted = await Service.delete(serviceId);
 
     if (!deleted) {
