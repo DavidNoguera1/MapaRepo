@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken');
 // Generar token JWT
 const generateToken = (userId) => {
   return jwt.sign(
-    { userId }, 
-    process.env.JWT_SECRET, 
+    { userId },
+    process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
 };
@@ -121,7 +121,48 @@ const login = async (req, res) => {
   }
 };
 
+// Reset password using cedula
+const resetPassword = async (req, res) => {
+  try {
+    const { cedula1, cedula2, newPassword } = req.body;
+
+    // Validaciones básicas
+    if (!cedula1 || !cedula2 || !newPassword) {
+      return res.status(400).json({ error: 'Cédula y nueva contraseña son requeridas' });
+    }
+
+    if (cedula1 !== cedula2) {
+      return res.status(400).json({ error: 'Los números de cédula no coinciden' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    }
+
+    // Buscar usuario por cédula
+    const user = await User.findByCedula(cedula1);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado con esa cédula' });
+    }
+
+    // Verificar si usuario está activo
+    if (!user.is_active) {
+      return res.status(400).json({ error: 'Cuenta desactivada' });
+    }
+
+    // Actualizar contraseña
+    await User.updatePassword(user.id, newPassword);
+
+    res.json({ message: 'Contraseña actualizada exitosamente' });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Error interno del servidor al resetear la contraseña' });
+  }
+};
+
 module.exports = {
   register,
-  login
+  login,
+  resetPassword
 };

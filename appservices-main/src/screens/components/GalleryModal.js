@@ -11,6 +11,8 @@ export default function GalleryModal({ visible, serviceId, onClose, isEditable =
   const { token } = useUser();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
 
   useEffect(() => {
     if (visible && serviceId) {
@@ -46,7 +48,6 @@ export default function GalleryModal({ visible, serviceId, onClose, isEditable =
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [4, 3],
         quality: 1,
       });
 
@@ -126,7 +127,10 @@ export default function GalleryModal({ visible, serviceId, onClose, isEditable =
   };
 
   const renderPhoto = ({ item }) => (
-    <View style={styles.photoContainer}>
+    <TouchableOpacity style={styles.photoContainer} onPress={() => {
+      setSelectedPhoto(item);
+      setImageViewerVisible(true);
+    }}>
       <Image
         source={{ uri: `${SERVER_BASE_URL}${item.photo_url}` }}
         style={styles.photo}
@@ -135,52 +139,73 @@ export default function GalleryModal({ visible, serviceId, onClose, isEditable =
       {isEditable && (
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => handleDeletePhoto(item.id)}
+          onPress={(e) => {
+            e.stopPropagation(); // Prevent triggering the image viewer
+            handleDeletePhoto(item.id);
+          }}
         >
           <Ionicons name="trash" size={20} color="#fff" />
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Galería de Fotos ({photos.length})</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#475569" />
-            </TouchableOpacity>
+    <>
+      <Modal visible={visible} animationType="slide" transparent>
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Galería de Fotos ({photos.length})</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close" size={24} color="#475569" />
+              </TouchableOpacity>
+            </View>
+
+            {isEditable && (
+              <TouchableOpacity style={styles.addButton} onPress={pickAndUploadPhoto} disabled={loading}>
+                <Ionicons name="add" size={20} color="#fff" />
+                <Text style={styles.addButtonText}>Agregar Foto</Text>
+              </TouchableOpacity>
+            )}
+
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text>Cargando...</Text>
+              </View>
+            ) : photos.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No hay fotos en la galería</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={photos}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderPhoto}
+                numColumns={2}
+                contentContainerStyle={styles.photosGrid}
+              />
+            )}
           </View>
+        </View>
+      </Modal>
 
-          {isEditable && (
-            <TouchableOpacity style={styles.addButton} onPress={pickAndUploadPhoto} disabled={loading}>
-              <Ionicons name="add" size={20} color="#fff" />
-              <Text style={styles.addButtonText}>Agregar Foto</Text>
-            </TouchableOpacity>
-          )}
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text>Cargando...</Text>
-            </View>
-          ) : photos.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No hay fotos en la galería</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={photos}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={renderPhoto}
-              numColumns={2}
-              contentContainerStyle={styles.photosGrid}
+      {/* Image Viewer Modal */}
+      <Modal visible={imageViewerVisible} animationType="fade" transparent>
+        <View style={styles.imageViewerOverlay}>
+          <TouchableOpacity style={styles.closeViewerButton} onPress={() => setImageViewerVisible(false)}>
+            <Ionicons name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+          {selectedPhoto && (
+            <Image
+              source={{ uri: `${SERVER_BASE_URL}${selectedPhoto.photo_url}` }}
+              style={styles.fullScreenImage}
+              resizeMode="contain"
             />
           )}
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 
@@ -224,5 +249,21 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  imageViewerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeViewerButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 1,
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '100%',
   },
 });

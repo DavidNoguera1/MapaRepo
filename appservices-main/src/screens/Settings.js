@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../contexts/UserContext';
-import { getProfile, updateProfile, updatePassword, deleteAccount } from '../api/user';
+import { getProfile, updateProfile, deleteAccount } from '../api/user';
 import { uploadProfileImage } from '../api/profile';
 import { SERVER_BASE_URL } from '../api/config';
 
@@ -19,11 +19,7 @@ export default function Settings() {
     phone: '',
     cedula: '',
   });
-  const [passwords, setPasswords] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmNewPassword: '',
-  });
+
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now());
@@ -44,9 +40,7 @@ export default function Settings() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePasswordChange = (field, value) => {
-    setPasswords(prev => ({ ...prev, [field]: value }));
-  };
+
 
   const handleSaveProfile = async () => {
     setLoading(true);
@@ -68,29 +62,7 @@ export default function Settings() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (passwords.newPassword !== passwords.confirmNewPassword) {
-      Alert.alert('Error', 'La nueva contraseña y su confirmación no coinciden');
-      return;
-    }
-    if (!passwords.currentPassword || !passwords.newPassword) {
-      Alert.alert('Error', 'Por favor completa todos los campos de contraseña');
-      return;
-    }
-    setLoading(true);
-    try {
-      await updatePassword(token, {
-        currentPassword: passwords.currentPassword,
-        newPassword: passwords.newPassword,
-      });
-      Alert.alert('Éxito', 'Contraseña actualizada correctamente');
-      setPasswords({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -257,36 +229,7 @@ export default function Settings() {
             <Text style={styles.saveButtonText}>{loading ? 'Guardando...' : 'Guardar Cambios'}</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Cambiar Contraseña</Text>
-          <Text style={styles.label}>Contraseña actual</Text>
-          <TextInput
-            style={styles.input}
-            value={passwords.currentPassword}
-            onChangeText={value => handlePasswordChange('currentPassword', value)}
-            placeholder="Contraseña actual"
-            secureTextEntry
-          />
-          <Text style={styles.label}>Nueva contraseña</Text>
-          <TextInput
-            style={styles.input}
-            value={passwords.newPassword}
-            onChangeText={value => handlePasswordChange('newPassword', value)}
-            placeholder="Nueva contraseña"
-            secureTextEntry
-          />
-          <Text style={styles.label}>Confirmar nueva contraseña</Text>
-          <TextInput
-            style={styles.input}
-            value={passwords.confirmNewPassword}
-            onChangeText={value => handlePasswordChange('confirmNewPassword', value)}
-            placeholder="Confirmar nueva contraseña"
-            secureTextEntry
-          />
-          <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword} disabled={loading}>
-            <Text style={styles.saveButtonText}>{loading ? 'Cambiando...' : 'Cambiar Contraseña'}</Text>
-          </TouchableOpacity>
-        </View>
+
         </ScrollView>
         <View style={styles.bottomButtons}>
           <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount} disabled={loading}>

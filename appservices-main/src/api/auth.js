@@ -37,3 +37,22 @@ export async function login({ email, password }) {
     throw error;
   }
 }
+
+export async function resetPassword({ cedula1, cedula2, newPassword }) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cedula1, cedula2, newPassword }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al resetear la contraseña');
+    }
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}

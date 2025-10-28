@@ -12,6 +12,7 @@ import Settings from '../screens/Settings';
 import Login from '../screens/Login';
 import ProfilePhoto from '../screens/ProfilePhoto';
 import Register from '../screens/Register';
+import RecContrasenia from '../screens/RecContrasenia';
 
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -62,6 +63,7 @@ export default function AppNavigator() {
       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
+        <Stack.Screen name="RecContrasenia" component={RecContrasenia} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="ChatScreen" component={ChatScreen} />
         <Stack.Screen name="ProfilePhoto" component={ProfilePhoto} />
