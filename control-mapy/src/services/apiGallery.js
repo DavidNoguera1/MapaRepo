@@ -5,7 +5,7 @@ export const galleryService = {
   // Get photos for a specific service
   getPhotosForService: async (serviceId) => {
     try {
-      const response = await api.get(`/services/${serviceId}/photos`);
+      const response = await api.get(`/service-photos/${serviceId}/photos`);
       // Map photo_url to full URL
       const photos = response.data.photos.map(photo => ({
         ...photo,
@@ -25,7 +25,7 @@ export const galleryService = {
       formData.append('service_photo', file);
       formData.append('position', position.toString());
 
-      const response = await api.post(`/services/${serviceId}/photos`, formData, {
+      const response = await api.post(`/service-photos/${serviceId}/photos`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -41,7 +41,7 @@ export const galleryService = {
   // Update photo position or URL
   updatePhoto: async (photoId, updateData) => {
     try {
-      const response = await api.put(`/services/photos/${photoId}`, updateData);
+      const response = await api.put(`/service-photos/photos/${photoId}`, updateData);
       return response.data;
     } catch (error) {
       console.error('Error updating photo:', error);
@@ -52,7 +52,7 @@ export const galleryService = {
   // Delete a photo
   deletePhoto: async (photoId) => {
     try {
-      const response = await api.delete(`/services/photos/${photoId}`);
+      const response = await api.delete(`/service-photos/photos/${photoId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting photo:', error);
@@ -63,7 +63,7 @@ export const galleryService = {
   // Get a specific photo by ID
   getPhotoById: async (photoId) => {
     try {
-      const response = await api.get(`/services/photos/${photoId}`);
+      const response = await api.get(`/service-photos/photos/${photoId}`);
       const photo = response.data.photo;
       return {
         ...photo,
