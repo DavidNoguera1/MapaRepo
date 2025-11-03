@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "app_services",
-    "slug": "app_services",
+    "name": "ServiMapa",
+    "slug": "ServiMapa",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/iconapp.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/iconapp.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/iconapp.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -26,6 +26,11 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "newArchEnabled": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4df13cdb-db35-47df-a8eb-9be4143e579b"
+      }
     }
   }
 }
